@@ -54,8 +54,7 @@ class PairwisePatchExtractor:
         case_info = {"fn_str": uuid, "ext": ext, "root_dir": root_dir, "dim": wsi_obj.dimensions}
         return wsi_obj, case_info
 
-
-    # get thumbnails from both WSIs for raw alignment
+    # get thumbnails from both WSIs for tissue detection
     def get_thumbnails(self, fixed_wsi_obj, float_wsi_obj):
         fixed_wsi_w, fixed_wsi_h = fixed_wsi_obj.dimensions
         float_wsi_w, float_wsi_h = float_wsi_obj.dimensions
@@ -113,7 +112,8 @@ class PairwisePatchExtractor:
         # TODO:
         print("TODO: add label to file name")
 
-    def exclude_patch_out_of_bond(self, fixed_foreground_indices, offset, patch_size, float_wsi_size):
+    @staticmethod
+    def exclude_patch_out_of_bond(fixed_foreground_indices, offset, patch_size, float_wsi_size):
         fixed_foreground_x_list, fixed_foreground_y_list = fixed_foreground_indices
         selected_x = []
         selected_y = []
@@ -224,8 +224,8 @@ if __name__ == "__main__":
     gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/tissue_others.tsv"
 
     from src.file_managment.wsi_case_manager import WSI_CaseManager  # # import dependent packages
-    from src.file_managment.offset_csv_manager import OffsetCSVManager  # # import dependent packages
-    from src.tissue_detection.tissue_detector import TissueDetector  # # import dependent packages
+    from src.file_managment.offset_csv_manager import OffsetCSVManager
+    from src.tissue_detection.tissue_detector import TissueDetector
 
     tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_files)
 

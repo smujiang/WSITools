@@ -296,9 +296,9 @@ if __name__ == '__main__':
     #float_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
     float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/"
 
-    from src.file_managment.wsi_case_manager import WSI_CaseManager   # # import dependent packages
-    from src.file_managment.offset_csv_manager import OffsetCSVManager  # # import dependent packages
-    from src.tissue_detection.tissue_detector import TissueDetector   # # import dependent packages
+    from src.file_managment.wsi_case_manager import WSI_CaseManager   # import dependent packages
+    from src.file_managment.offset_csv_manager import OffsetCSVManager
+    from src.tissue_detection.tissue_detector import TissueDetector
 
     case_mn = WSI_CaseManager()
     float_wsi = case_mn.get_counterpart_fn(fixed_wsi, float_wsi_root_dir)
