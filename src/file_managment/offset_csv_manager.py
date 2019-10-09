@@ -82,6 +82,7 @@ class OffsetCSVManager:
         fp.writelines(updated_lines)
         fp.close()
 
+
 # example
 if __name__ == '__main__':
     print("see auto_wsi_matcher.py for examples")
