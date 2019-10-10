@@ -39,11 +39,11 @@ The code for this annotation export is located at [export_anno_binary_jpgs.groov
 
 
 ### 2.3 Export offset/points annotation to xml 
+see functions ```get_xml_offset_barycentric``` and ```get_affine_matrix``` in [offset_annotation.py](../../../src/wsi_annotation/offset_annotation.py)
 
 
 ### 2.4 Export offset/points annotation to zip
- 
-
+see function ```get_QuPath_offset_barycentric``` in [offset_annotation.py](../../../src/wsi_annotation/offset_annotation.py)
 
 ## 3. Work with Aperio
 ### 3.1 From QuPath to Aperio
