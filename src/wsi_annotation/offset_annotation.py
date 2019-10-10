@@ -3,9 +3,13 @@ import numpy as np
 import openslide
 from PIL import Image
 import matplotlib.pyplot as plt
-
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 class OffsetAnnotation:
+    def __init__(self):
+        self.points = []
+
     @staticmethod
     def load_QuPath_points_from_QuPath_zip(anno_dir, case_uuid, ext='.tiff'):
         txt_file = os.path.join(anno_dir, case_uuid + ext + "-points", "Points 1.txt")
@@ -16,14 +20,38 @@ class OffsetAnnotation:
         for coord_str in coords_str_list:
             ele = coord_str.strip().split("\t")
             coords.append([ele[0], ele[1]])
-        # print(coords)
         fp.close()
         return np.array(coords).astype(float)
 
-    def get_anno_offset_barycentric(self, anno_dir, template_case_uuid, test_case_uuid):
-        template_anno_points = self.load_QuPath_points_from_QuPath_zip(anno_dir, template_case_uuid)
-        test_anno_points = self.load_QuPath_points_from_QuPath_zip(anno_dir, test_case_uuid)
-        offsets = np.mean(template_anno_points, axis=0) - np.mean(test_anno_points, axis=0)
+    # def get_anno_offset_barycentric(self, anno_dir, template_case_uuid, test_case_uuid):
+    #     template_anno_points = self.load_QuPath_points_from_QuPath_zip(anno_dir, template_case_uuid)
+    #     test_anno_points = self.load_QuPath_points_from_QuPath_zip(anno_dir, test_case_uuid)
+    #     offsets = np.mean(template_anno_points, axis=0) - np.mean(test_anno_points, axis=0)
+    #     return offsets
+
+    @staticmethod
+    # attr_filter, please refer to: https://docs.python.org/2/library/xml.etree.elementtree.html
+    def load_QuPath_points_from_xml(xml_fn, attr_match=['Points', 'offset']):
+        xml = minidom.parse(xml_fn)
+        regions = xml.getElementsByTagName("Region")
+        points = []
+        for region in regions:
+            vertices = region.getElementsByTagName("Vertex")
+            label_text = region.getAttribute('Text')
+            region_geo_shape = region.getAttribute('GeoShape')
+            if region_geo_shape == attr_match[0] and label_text == attr_match[1]:
+                # Store x, y coordinates into a 2D array in format [x1, y1], [x2, y2], ...
+                coords = np.zeros((len(vertices), 2))
+                for i, vertex in enumerate(vertices):
+                    coords[i][0] = vertex.attributes['X'].value
+                    coords[i][1] = vertex.attributes['Y'].value
+                points.append(coords)
+        return points
+
+    def get_anno_offset_barycentric(self, fixed_xml, float_xml):
+        template_anno_points = self.load_QuPath_points_from_xml(fixed_xml)
+        test_anno_points = self.load_QuPath_points_from_xml(float_xml)
+        offsets = np.mean(template_anno_points, axis=1) - np.mean(test_anno_points, axis=1)
         return offsets
 
     @staticmethod
@@ -56,6 +84,7 @@ class OffsetAnnotation:
         ax4 = fig.add_subplot(224)
         ax4.imshow(error_img, cmap="gray")
         plt.show()
+
 
     def get_affine_matrix(self, template_anno_points, test_anno_points):
         return ""
@@ -98,3 +127,14 @@ class OffsetAnnotation:
 
         # calculate affine transformation matrix
         return np.column_stack((np.row_stack((R, t)), (0, 0, 0, 1)))
+
+
+# example
+if __name__ == "__main__":
+    fixed_xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/1c2d01bbee8a41e28357b5ac50b0f5ab.xml"
+    float_xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/1c2d01bbee8a41e28357b5ac50b0f5ab.xml"
+    offset_anno = OffsetAnnotation()
+    offset = offset_anno.get_anno_offset_barycentric(fixed_xml_fn, float_xml_fn)
+    print(offset)
+
+
