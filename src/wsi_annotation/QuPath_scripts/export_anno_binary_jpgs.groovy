@@ -28,10 +28,11 @@ def annotations = hierarchy.getFlattenedObjectList(null).findAll {it.isAnnotatio
 
 // Define downsample value for export resolution & output directory, creating directory if necessary
 def downsample = 128.0
+// modify this root_dir to specify where you would like to save your export
 def pathOutput = "H:\\PenMarking\\eval\\qupath_annotation\\tiles"
 
 // Define image export type; valid values are JPG, PNG or null (if no image region should be exported with the mask)
-// Note: masks will always be exported as PNG
+// Note: masks will always be exported as JPG/PNG
 def imageExportType = 'JPG'
 
 // Export each annotation
