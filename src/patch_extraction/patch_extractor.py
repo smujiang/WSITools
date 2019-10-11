@@ -109,6 +109,7 @@ class PatchExtractor:
 
     # get image patches and write to files
     def save_patch_without_annotation(self, wsi_obj, case_info, indices):
+        patch_cnt = 0
         if self.with_feature_map:
             tf_fp = self.generate_tfRecord_fp(case_info, self.feature_map)
         [loc_x, loc_y] = indices
@@ -125,6 +126,7 @@ class PatchExtractor:
             if self.patch_filter_by_area:  # if we need to filter the image patch
                 Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=0.5)
             if Content_rich:
+                patch_cnt += 1
                 if self.with_feature_map:  # Append patch to tfRecord file
                     # tf_fp.append()
                     print("TODO: Append patch to tfRecord file %s" % tf_fp)
@@ -143,6 +145,7 @@ class PatchExtractor:
                         raise Exception("Can't recognize save format")
             else:
                 logging.debug("Ignore the patch")
+        return patch_cnt
 
     def extract(self, wsi_fn):
         wsi_obj, case_info = self.get_case_info(wsi_fn)
@@ -155,7 +158,7 @@ class PatchExtractor:
             ax[1].imshow(wsi_thumb_mask, cmap='gray')
             plt.show()
         if not self.with_anno:
-            self.save_patch_without_annotation(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
+            return self.save_patch_without_annotation(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
         else:
             print("TODO: extract patches with annotations")
 
@@ -177,9 +180,9 @@ if __name__ == "__main__":
     output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
     parameters = ExtractorParameters(output_dir, save_format='.jpg', sample_cnt=-1)
     patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
-    patch_extractor.extract(wsi_fn)
+    patch_num = patch_extractor.extract(wsi_fn)
 
-    print("Patches have been save to %s" % output_dir)
+    print("%d Patches have been save to %s" % (patch_num, output_dir))
 
 
 

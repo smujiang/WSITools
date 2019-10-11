@@ -45,7 +45,7 @@ see functions ```get_xml_offset_barycentric``` and ```get_affine_matrix``` in [o
 ### 2.4 Export offset/points annotation to zip
 see function ```get_QuPath_offset_barycentric``` in [offset_annotation.py](../../../src/wsi_annotation/offset_annotation.py)
 
-## 3. Work with Aperio
+## 3. Work with Aperio Image Scope
 ### 3.1 From QuPath to Aperio
 Aperio Image Scope(a whole slide image viewer) can also provide annotations in this xml format, which means the xml may also be able to be import to Aperio. And Aperio may also be able to a annotation tool for our project.
 
