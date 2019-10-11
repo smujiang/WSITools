@@ -136,6 +136,7 @@ class PairwisePatchExtractor:
 
     # get image patches and write to files
     def save_patch_without_annotation(self, fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, indices):
+        patch_cnt = 0
         if self.with_feature_map:
             tf_fp = self.generate_tfRecord_fp(fixed_case_info, self.feature_map)
         [loc_x, loc_y] = indices
@@ -162,6 +163,7 @@ class PairwisePatchExtractor:
                 Content_rich = self.filter_by_content_area(np.array(fixed_patch), area_threshold=0.5) and \
                                self.filter_by_content_area(np.array(float_patch), area_threshold=0.5)
             if Content_rich:
+                patch_cnt += 1
                 logging.debug("extract from fixe image: %d %d and float image: %d %d" % (loc_y[idx], lx, int(loc_y[idx] + offset[0]), int(lx + offset[1])))
                 if self.with_feature_map:  # Append patch to tfRecord file
                     # tf_fp.append()
@@ -190,6 +192,7 @@ class PairwisePatchExtractor:
                         raise Exception("Can't recognize save format")
             else:
                 logging.debug("Ignore the patch")
+        return patch_cnt
 
     def extract(self, fixed_wsi_fn, float_wsi_fn, offset):
         fixed_wsi_obj, fixed_case_info = self.get_case_info(fixed_wsi_fn)
@@ -206,7 +209,7 @@ class PairwisePatchExtractor:
         #     ax[2].imshow(fixed_wsi_thumb_mask, cmap='gray')
         #     plt.show()
         if not self.with_anno:
-            self.save_patch_without_annotation(fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, intersection_indices)
+            return self.save_patch_without_annotation(fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, intersection_indices)
         else:
             # TODO:
             print("TODO: extract patches with annotations")
@@ -243,9 +246,9 @@ if __name__ == "__main__":
     output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
     parameters = PairwiseExtractorParameters(output_dir, save_format='.jpg', sample_cnt=-1)
     patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
-    patch_extractor.extract(fixed_wsi, float_wsi, offset)
+    patch_cnt = patch_extractor.extract(fixed_wsi, float_wsi, offset)
 
-    print("Patches have been save to %s" % output_dir)
+    print("%d Patches have been save to %s" % (patch_cnt, output_dir))
 
 
 
