@@ -172,7 +172,7 @@ if __name__ == "__main__":
     # wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
     gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/tissue_others.tsv"
 
-    from src.tissue_detection.tissue_detector import TissueDetector  # import dependent packages
+    from wsitools.tissue_detection.tissue_detector import TissueDetector  # import dependent packages
 
     tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_files)
 

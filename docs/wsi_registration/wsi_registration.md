@@ -4,7 +4,7 @@ Occasionally, we need to scan the slide twice (scan the slide and then treat the
 Ideally, this is a rigid image registration problem, just shifting, even without rotation (According to the way of mounting the slides, their should be no rotation of two scans.)
 So in current version, we didn't take the rotation into account, because the rotation angle is so tiny and can be ignored. 
 
-To standardize the offset saving and loading, we introduced a [csv file](../../src/file_managment/example/wsi_pair_offset.csv) to maintain the WSI pairs and their offsets.
+To standardize the offset saving and loading, we introduced a [csv file](../../wsitools/file_managment/example/wsi_pair_offset.csv) to maintain the WSI pairs and their offsets.
 
 We provide two ways to get the shifting offset: 
 ### 1. Automatic registration
@@ -12,10 +12,10 @@ Here is the an example of how to automatically align two WSIs and save/load the 
 Note that you need to [define a tissue detector](../tissue_detection/tissue_detector.md) to identify the foreground of a WSI, from which image patches will be extracted, and shifting offset will be calculated based on these patches.
 Additionally, you may also need a ```WSI_CaseManager``` to help you to find the WSI counterpart, which maintains the correspondence in a MS Excel file. 
 ```python
-from WSItools.file_managment.wsi_case_manager import WSI_CaseManager   # import dependent packages
-from WSItools.file_managment.offset_csv_manager import OffsetCSVManager
-from WSItools.tissue_detection.tissue_detector import TissueDetector
-from WSItools.wsi_registration.auto_wsi_matcher import MatcherParameters, WSI_Matcher
+from wsitools.file_managment.wsi_case_manager import WSI_CaseManager   # import dependent packages
+from wsitools.file_managment.offset_csv_manager import OffsetCSVManager
+from wsitools.tissue_detection.tissue_detector import TissueDetector
+from wsitools.wsi_registration.auto_wsi_matcher import MatcherParameters, WSI_Matcher
 fixed_wsi = "/projects/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
 #float_wsi = "/projects/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
 float_wsi_root_dir = "/projects/MELF-Clean/"

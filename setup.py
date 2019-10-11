@@ -1,13 +1,24 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
-    name='WSItools',
+    name='wsitools',
     version='0.1dev',
     description='Whole slide image processing tools',
-    packages=['src'],
+    packages=find_packages(),
     author="Jun Jiang",
     author_email="Jiang.Jun@mayo.edu",
     url='https://github.com/smujiang/smujiang.github.io',
     license='Creative Commons Attribution-Noncommercial-Share Alike license',
-    long_description=open('README.md').read(),
+    install_requires=[
+        'numpy',
+        'matplotlib',
+        'opencv-python',
+        'xlrd',
+        'scikit-image',
+        'scikit-learn',
+        'scipy',
+        'openslide-python',
+        'shapely',
+        'pillow'
+    ]
 )

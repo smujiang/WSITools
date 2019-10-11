@@ -226,9 +226,9 @@ if __name__ == "__main__":
     float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean"
     gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/tissue_others.tsv"
 
-    from src.file_managment.wsi_case_manager import WSI_CaseManager  # # import dependent packages
-    from src.file_managment.offset_csv_manager import OffsetCSVManager
-    from src.tissue_detection.tissue_detector import TissueDetector
+    from wsitools.file_managment.wsi_case_manager import WSI_CaseManager  # # import dependent packages
+    from wsitools.file_managment.offset_csv_manager import OffsetCSVManager
+    from wsitools.tissue_detection.tissue_detector import TissueDetector
 
     tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_files)
 
