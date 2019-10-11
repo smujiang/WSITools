@@ -7,7 +7,7 @@ To start patch extraction, first, you need to [define a tissue detector](../tiss
 To extract patches from a single WSI, you can write your code like below.    
 Currently, we don't provide acceleration for single case patch extraction
 ```python
-from WSItools.patch_extraction import ExtractorParameters, PatchExtractor
+from WSItools.patch_extraction.patch_extractor import ExtractorParameters, PatchExtractor
 
 wsi_fn = "/data/8a26a55a78b947059da4e8c36709a828.tiff" # WSI file name
 gnb_training_files = "./model_files/tissue_others.tsv"
