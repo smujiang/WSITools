@@ -1,4 +1,4 @@
-# Patch Extraction
+# Pairwise Patch Extraction
 This module aims at extracting patches from a pair of whole slide images.
   
 Like [extract patches from a single case](./patch_extraction.md), you also need to [define a tissue detector](../tissue_detection/tissue_detector.md) to identify the foreground of a WSI, because we don't want to wast our time on blank patches. Other than that you may also need a ```WSI_CaseManager``` to help you to find the WSI counterpart, which maintains the correspondence in a MS Excel file.  
