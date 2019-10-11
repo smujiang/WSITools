@@ -4,6 +4,8 @@ import random
 
 class CaseListManager:
     def __init__(self, case_list_txt, ext='.tiff'):
+        if case_list_txt is None:
+            case_list_txt = "./example/case_list.txt"
         self.case_list = []
         self.case_uuid_list = []
         lines = open(case_list_txt, 'r').readlines()

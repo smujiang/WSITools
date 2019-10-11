@@ -5,6 +5,8 @@ import os
 class OffsetCSVManager:
     def __init__(self, offset_table_csv_fn):
         self.offset_csv = offset_table_csv_fn
+        if self.offset_csv is None:
+            self.offset_csv = "./example/wsi_pair_offset.csv"
         if not os.path.exists(offset_table_csv_fn):
             raise Exception("Offset file does not exist.")
         auto_offset_dict = {}

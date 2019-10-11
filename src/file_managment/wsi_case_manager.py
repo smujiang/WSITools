@@ -5,7 +5,7 @@ import os
 class WSI_CaseManager:
     def __init__(self, case_inventory_xls=None, sheet=6, cols=(6, 9), rows=(8, -1)):
         if not bool(case_inventory_xls):    # if it's empty, load the default one
-            case_inventory_xls = "/projects/shart/digital_pathology/data/PenMarking/model/Flotte Slide Master Inventory - TF.xlsx"
+            case_inventory_xls = "./example/wsi_cases_FlotteSlideMasterInventory-TF.xlsx"
         MELF_Sheet_idx = sheet  # index of the sheet
         Marked_UUID_idx = cols[0]  # index of column save marked WSI
         Clean_UUID_idx = cols[1]  # index of column save clean WSI

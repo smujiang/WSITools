@@ -9,6 +9,8 @@ class ClassLabelCSVManager:
     def __init__(self, class_label_id_csv_fn):
         if not os.path.exists(class_label_id_csv_fn):
             raise Exception("File does not exist.")
+        if class_label_id_csv_fn is None:
+            class_label_id_csv_fn = "./example/case_label_id.csv"
         self.label_text_id_dict = {}
         lines = open(class_label_id_csv_fn, 'r').readlines()
         for l in lines[1:-1]:  # skip the first line
