@@ -1,0 +1,2 @@
+1. validate the imported annotations
+2. combine these annotation information into patch extractions

@@ -1,0 +1,2 @@
+1. take rotation into account?
+2. develop a neural network based method
