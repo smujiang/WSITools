@@ -1,0 +1,5 @@
+/projects/digital_pathology/WSIs/c477c949f26a40eca92657b1bcf5dcca.tiff
+/projects/digital_pathology/WSIs/a0e53609686a4ae9a824d9525641dc56.tiff
+/projects/digital_pathology/WSIs/d83cc7d1c941438e93786fc381ab5bb5.tiff
+/projects/digital_pathology/WSIs/e39a8d60a56844d695e9579bce8f0335.tiff
+/projects/digital_pathology/WSIs/e330364d65d24dfeb170ccbb742b2624.tiff

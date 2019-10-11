@@ -49,19 +49,6 @@ class WSI_CaseManager:
         else:
             raise Exception("Can't find counterpart")
 
-    @staticmethod
-    def export_case_list_from_dir(wsi_dir, output_txt, wsi_ext='.tiff'):
-        # export all the cases to a txt file
-        file_list = os.listdir(wsi_dir)
-        wrt_str = ""
-        for f in file_list:
-            if os.path.splitext(f)[1] == wsi_ext:
-                wrt_str += os.path.join(wsi_dir, f) + "\n"
-        wrt_str = wrt_str.strip()
-        fp = open(output_txt, 'w')
-        fp.write(wrt_str)
-        fp.close()
-
 
 # example
 if __name__ == '__main__':
