@@ -1,9 +1,11 @@
-#Patch Extraction
+# Patch Extraction
+This module aims at extracting patches from whole slide images.  
+Be aware, you need to [define a tissue detector](../tissue_detection/tissue_detector.md) to identify the foreground of a WSI, because we don't want to wast our time on blank patches.   
+You may also need to specify some parameters to customise your extraction. All the parameters are warped in ```ExtractorParameters``` of [patch_extractor.py](../../src/patch_extraction/patch_extractor.py). Read the comments in the file to get more details. 
 
 ### Extract patches from a single WSI
 To extract patches from a single WSI, you can write your code like below.    
-Be aware, you need to [define a tissue detector](../tissue_detection/tissue_detector.md) to identify the foreground of a WSI, because we don't want to wast our time on blank patches.
-
+Currently, we don't provide acceleration for single case patch extraction
 ```python
 from WSItools.patch_extraction import ExtractorParameters, PatchExtractor
 
@@ -19,8 +21,14 @@ parameters = ExtractorParameters(output_dir, save_format='.jpg', sample_cnt=-1)
 patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
 patch_num = patch_extractor.extract(wsi_fn)
 print("%d Patches have been save to %s" % (patch_num, output_dir))
+```
+
+### Extract patches from a list of WSI
+Multiprocessing can be adopted to accelerate the extraction.
+```python
 
 ```
+
 
 
 
