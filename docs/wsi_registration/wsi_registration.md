@@ -7,7 +7,7 @@ So in current version, we didn't take the rotation into account, because the rot
 To standardize the offset saving and loading, we introduced a [csv file](../../src/file_managment/example/wsi_pair_offset.csv) to maintain the WSI pairs and their offsets.
 
 We provide two ways to get the shifting offset: 
-1. Automatic registration
+### 1. Automatic registration
 Here is the an example of how to automatically align two WSIs and save/load the offset to/from the csv file.
 Note that you need to [define a tissue detector](../tissue_detection/tissue_detector.md) to identify the foreground of a WSI, from which image patches will be extracted, and shifting offset will be calculated based on these patches.
 Additionally, you may also need a ```WSI_CaseManager``` to help you to find the WSI counterpart, which maintains the correspondence in a MS Excel file. 
@@ -48,8 +48,8 @@ else:
     print("Looking up ground truth offset from %s" % offset_csv_fn)
     print("Found ground truth offset: (%.2f %.2f)" % (offset_tmp[0], offset_tmp[1]))
 ``` 
-2. QuPath annotation
-Here is a document shows how to annotate with QuPath, export the annotation and calculate offset with python.
+### 2. QuPath annotation  
+We provide this [Annotate with QuPath and Export Annotations](../wsi_annotation/QuPath_scripts/readme.md)  document shows how to annotate with QuPath, export the annotation and calculate offset with python.
 
 
 
