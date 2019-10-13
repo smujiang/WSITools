@@ -48,7 +48,8 @@ class CaseListManager:
         rd_n = random.randint(0, len(self.case_list))
         return self.case_list[rd_n]
 
-
+    def get_case_num(self):
+        return len(self.case_uuid_list)
 
 
 
