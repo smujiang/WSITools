@@ -1,3 +1,4 @@
 1. add the mouse sampling tool into this folder
 2. modify the tool, use WSI rather than jpg as input.
-3. provide more options for tissue detection 
+3. add a sampling divisor to generate thumbnail and show in the tool.
+4. provide more options for tissue detection
