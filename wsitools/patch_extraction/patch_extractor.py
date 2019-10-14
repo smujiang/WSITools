@@ -3,7 +3,7 @@ import numpy as np
 import os, sys
 from skimage.color import rgb2lab
 import logging
-
+import tensorflow as tf
 
 class ExtractorParameters:
     def __init__(self,  save_dir, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=True, with_anno=True, rescale_rate=128, patch_size=128, extract_layer=0):
@@ -31,14 +31,14 @@ class PatchExtractor:
         self.sample_cnt = parameters.sample_cnt
         self.feature_map = feature_map
         self.annotations = annotations
-        if self.save_format == ".tfrecord":   #tfRecord
+        if self.save_format == ".tfRecord":   #tfRecord
             if feature_map is not None:
                 self.with_feature_map = True
-            else:  # feature map for tfRecords, if save_format is ".tfrecord", it can't be None
+            else:  # feature map for tfRecords, if save_format is ".tfRecord", it can't be None
                 raise Exception("No feature map can refer to create tfRecord")
         else:
             if feature_map is not None:
-                logging.debug("No need to specify feature mat")
+                logging.info("No need to specify feature mat")
             self.with_feature_map = False
         if annotations is None:
             self.with_anno = False
@@ -52,7 +52,6 @@ class PatchExtractor:
         uuid, ext = os.path.splitext(fn)
         case_info = {"fn_str": uuid, "ext": ext, "root_dir": root_dir}  # TODO: get file information from the file name
         return wsi_obj, case_info
-
 
     def get_thumbnail(self, wsi_obj):
         wsi_w, wsi_h = wsi_obj.dimensions
@@ -102,17 +101,27 @@ class PatchExtractor:
             print("TODO: add label to file name")
         return fn
 
-    @staticmethod
-    def generate_tfRecord_fp(case_info, feature_map):
-        # TODO:
-        print("TODO: generate tfRecord file handle")
-        return ""
+    def generate_tfRecord_fp(self, case_info, feature_map):
+        tmp = case_info["fn_str"] + self.save_format
+        fn = os.path.join(self.save_dir, tmp)
+        writer = tf.python_io.TFRecordWriter(fn)  # generate tfRecord file handle
+        return writer, fn
+
+    # TODO: customize the feature map, maybe need another class
+    def update_feature_map(self, key_values):
+        def _int64_feature(value):
+            return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+        def _bytes_feature(value):
+            return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+        self.feature_map = {'train/label': _int64_feature(key_values["label"]),
+                            'train/image': _bytes_feature(tf.compat.as_bytes(key_values["image"].tobytes()))}
 
     # get image patches and write to files
     def save_patch_without_annotation(self, wsi_obj, case_info, indices):
         patch_cnt = 0
         if self.with_feature_map:
-            tf_fp = self.generate_tfRecord_fp(case_info, self.feature_map)
+            tf_writer, tf_fn = self.generate_tfRecord_fp(case_info, self.feature_map)
         [loc_x, loc_y] = indices
         for idx, lx in enumerate(loc_x):
             if logging.DEBUG == logging.root.level:
@@ -129,8 +138,14 @@ class PatchExtractor:
             if Content_rich:
                 patch_cnt += 1
                 if self.with_feature_map:  # Append patch to tfRecord file
-                    # tf_fp.append()
-                    print("TODO: Append patch to tfRecord file %s" % tf_fp)
+                    # print("Append patch to tfRecord file %s" % tf_fn)
+                    # TODO: write the data into the customized key-value map, maybe need to implement in another class
+                    key_values = {"image": patch, "label": 1}
+                    self.update_feature_map(key_values)
+                    # Create an example protocol buffer
+                    example = tf.train.Example(features=tf.train.Features(feature=self.feature_map))
+                    # Serialize to string and write on the file
+                    tf_writer.write(example.SerializeToString())
                 else:  # save patch to jpg, with label text and id in file name
                     if logging.DEBUG == logging.root.level:
                         import matplotlib.pyplot as plt
@@ -139,13 +154,18 @@ class PatchExtractor:
                         plt.show()
                     fn = self.generate_patch_fn(case_info, (loc_x[idx], loc_y[idx]))
                     if self.save_format == ".jpg":
-                        patch.convert("RGB").save(fn)
+                        if patch.mode == "RGBA":
+                            patch = patch.convert("RGB")
+                        patch.save(fn)
                     elif self.save_format == ".png":
+                        if patch.mode == "RGB":
+                            patch = patch.convert("RGBA")
                         patch.save(fn)
                     else:
                         raise Exception("Can't recognize save format")
             else:
                 logging.debug("Ignore the patch")
+        tf_writer.close()
         return patch_cnt
 
     def extract(self, wsi_fn):
@@ -179,8 +199,15 @@ if __name__ == "__main__":
 
     # extract patches without annotation, no feature map specified and save patches to '.jpg'
     output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
-    parameters = ExtractorParameters(output_dir, save_format='.jpg', sample_cnt=-1)
-    patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
+
+    # Save to JPG/PNG files
+    # parameters = ExtractorParameters(output_dir, save_format='.png', sample_cnt=-1)
+    # patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
+    # patch_num = patch_extractor.extract(wsi_fn)
+
+    # Save to tfRecords
+    parameters = ExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)
+    patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map="", annotations=None)
     patch_num = patch_extractor.extract(wsi_fn)
 
     print("%d Patches have been save to %s" % (patch_num, output_dir))
