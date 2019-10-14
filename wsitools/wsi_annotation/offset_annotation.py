@@ -52,6 +52,7 @@ class OffsetAnnotation:
         offsets = np.mean(template_anno_points, axis=1) - np.mean(test_anno_points, axis=1)
         return offsets
 
+    # ---------------------------------------------- #
     @staticmethod
     def get_affine_matrix(fixed_points, float_points):
         l = len(fixed_points)
@@ -94,8 +95,6 @@ class OffsetAnnotation:
         ax4 = fig.add_subplot(224)
         ax4.imshow(error_img, cmap="gray")
         plt.show()
-
-
 
 
 # example

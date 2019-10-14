@@ -18,7 +18,7 @@ python setup.py install
 ## Documents
 [Annotate with QuPath and Export Annotations](docs/wsi_annotation/QuPath_scripts/readme.md)   
 [Tissue Detection](docs/tissue_detection/tissue_detector.md)   
-[WSI Aligment](docs/wsi_registration/wsi_registration.md)    
+[WSI Alignment](docs/wsi_registration/wsi_registration.md)    
 [Patch Extraction](docs/patch_extraction/patch_extraction.md)     
 [Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md)
 
