@@ -1,5 +1,16 @@
 # WSITools
 Tools for whole slide image (WSI) processing
+## Quick Start
+### Installation
+```bash
+git clone https://github.com/smujiang/WSITools.git
+cd WSITools
+python setup.py install
+```
+### Testing
+
+
+
 ## Descriptions
 
 ## Architectures
