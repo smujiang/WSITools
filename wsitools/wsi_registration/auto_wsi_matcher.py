@@ -309,7 +309,6 @@ if __name__ == '__main__':
     offset_csv_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/registration_offsets.csv"
     offset_csv_mn = OffsetCSVManager(offset_csv_fn)
     offset_tmp, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
-    state_indicator = 1
     if state_indicator == 0 or state_indicator == 1:     # Auto registration does not exist
         gnb_training_tsv = "../tissue_detection/model_files/tissue_others.tsv"
         tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_tsv)
