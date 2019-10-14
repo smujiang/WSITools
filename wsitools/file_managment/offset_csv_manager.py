@@ -52,24 +52,23 @@ class OffsetCSVManager:
 
     def update_ground_truth(self, fixed_wsi_uuid, float_wsi_uuid, offset):
         updated_lines = self.lines
-        for idx, l in enumerate(self.lines[1:-1]):  # skip the first line
+        for idx, l in enumerate(self.lines[1:]):  # skip the first line
             if l.strip():
                 ele = l.split(",")
                 if ele[0] == fixed_wsi_uuid:
                     if ele[1] == float_wsi_uuid:
+                        print("Fixed WSI uuid not in the file, append this case")
                         updated_lines[idx+1] = fixed_wsi_uuid + "," + float_wsi_uuid + "," + str(offset[0]) + "," + str(offset[1]) + "," + ele[4] + "," + ele[5] + "\n"
                     else:
                         print("Fixed and float WSI uuid may not match, please check")
-                else:
-                    print("Fixed WSI uuid not in the file, append this case")
-                    updated_lines[idx+1] = fixed_wsi_uuid + "," + float_wsi_uuid + "," + str(offset[0]) + "," + str(offset[1]) + "," + ele[4] + "," + ele[5] + "\n"
-        fp = open(self.offset_csv, 'w')
-        fp.writelines(updated_lines)
-        fp.close()
+        # fp = open(self.offset_csv, 'w')
+        # fp.writelines(updated_lines)
+        # fp.close()
+        print(updated_lines)
 
     def update_auto_registration(self, fixed_wsi_uuid, float_wsi_uuid, offset):
         updated_lines = self.lines
-        for idx, l in enumerate(self.lines[1:-1]):  # skip the first line
+        for idx, l in enumerate(self.lines[1:]):  # skip the first line
             if l.strip():
                 ele = l.split(",")
                 if ele[0] == fixed_wsi_uuid:
@@ -77,12 +76,10 @@ class OffsetCSVManager:
                         updated_lines[idx + 1] = fixed_wsi_uuid + "," + float_wsi_uuid + "," + ele[2] + "," + ele[3] + "," + str(offset[0]) + "," + str(offset[1]) + "\n"
                     else:
                         print("Fixed and float WSI uuid may not match, please check")
-                else:
-                    print("Fixed WSI uuid not in the file, append this case")
-                    updated_lines[idx + 1] = fixed_wsi_uuid + "," + float_wsi_uuid + "," + ele[2] + "," + ele[3] + "," + str(offset[0]) + "," + str(offset[1]) + "\n"
-        fp = open(self.offset_csv, 'w')
-        fp.writelines(updated_lines)
-        fp.close()
+        # fp = open(self.offset_csv, 'w')
+        # fp.writelines(updated_lines)
+        # fp.close()
+        print(updated_lines)
 
 
 # example
