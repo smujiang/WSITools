@@ -34,7 +34,7 @@ class TissueDetector:
         return gnb_model
 
     def get_default_gnb_model(self):
-        self.tsv_name = "./model_files/tissue_others.tsv"  # this file is created by our annotation tool
+        self.tsv_name = "./model_files/HE_tissue_others.tsv"  # this file is created by our annotation tool
         bkg_train_data = self.read_training_dim(3)
         gnb_bkg = GaussianNB()
         gnb_bkg.fit(bkg_train_data[:, 1:], bkg_train_data[:, 0])

@@ -310,7 +310,7 @@ if __name__ == '__main__':
     offset_csv_mn = OffsetCSVManager(offset_csv_fn)
     offset_tmp, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
     if state_indicator == 0 or state_indicator == 1:     # Auto registration does not exist
-        gnb_training_tsv = "../tissue_detection/model_files/tissue_others.tsv"
+        gnb_training_tsv = "../tissue_detection/model_files/HE_tissue_others.tsv"
         tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_tsv)
         matcher_parameters = MatcherParameters()
         matcher = WSI_Matcher(tissue_detector, matcher_parameters)

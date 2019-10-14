@@ -233,7 +233,7 @@ if __name__ == "__main__":
     # fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/d83cc7d1c941438e93786fc381ab5bb5.tiff"
     fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a56844d695e9579bce8f0335.tiff"
     float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean"
-    gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/tissue_others.tsv"
+    gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/HE_tissue_others.tsv"
 
     from wsitools.file_management.wsi_case_manager import WSI_CaseManager  # # import dependent packages
     from wsitools.file_management.offset_csv_manager import OffsetCSVManager

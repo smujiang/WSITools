@@ -171,7 +171,7 @@ if __name__ == "__main__":
     wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
     # wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/d83cc7d1c941438e93786fc381ab5bb5.tiff"
     # wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
-    gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/tissue_others.tsv"
+    gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/HE_tissue_others.tsv"
 
     from wsitools.tissue_detection.tissue_detector import TissueDetector  # import dependent packages
 

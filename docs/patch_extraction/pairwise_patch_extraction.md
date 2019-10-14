@@ -12,7 +12,7 @@ Currently, we don't provide acceleration for single case patch extraction
 ```python
 fixed_wsi = "/projects/WSIs/d83cc7d1c941438e93786fc381ab5bb5.tiff"
 float_wsi_root_dir = "/projects/WSIs/MELF-Clean"
-gnb_training_files = "../tissue_detection/model_files/tissue_others.tsv"
+gnb_training_files = "../tissue_detection/model_files/HE_tissue_others.tsv"
 
 from wsitools.file_management.wsi_case_manager import WSI_CaseManager  # import dependent packages
 from wsitools.file_management.offset_csv_manager import OffsetCSVManager
