@@ -308,7 +308,7 @@ if __name__ == '__main__':
     offset_csv_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/registration_offsets.csv"
     offset_csv_mn = OffsetCSVManager(offset_csv_fn)
     offset_tmp, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
-    if state_indicator == 0 or staticmethod == 1:     # Auto registration does not exist
+    if state_indicator == 0 or state_indicator == 1:     # Auto registration does not exist
         tissue_detector = TissueDetector("GNB", threshold=0.5)
         matcher_parameters = MatcherParameters()
         matcher = WSI_Matcher(tissue_detector, matcher_parameters)
