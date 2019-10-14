@@ -14,8 +14,8 @@ fixed_wsi = "/projects/WSIs/d83cc7d1c941438e93786fc381ab5bb5.tiff"
 float_wsi_root_dir = "/projects/WSIs/MELF-Clean"
 gnb_training_files = "../tissue_detection/model_files/tissue_others.tsv"
 
-from WSItools.file_managment.wsi_case_manager import WSI_CaseManager  # import dependent packages
-from WSItools.file_managment.offset_csv_manager import OffsetCSVManager
+from WSItools.file_management.wsi_case_manager import WSI_CaseManager  # import dependent packages
+from WSItools.file_management.offset_csv_manager import OffsetCSVManager
 from WSItools.tissue_detection.tissue_detector import TissueDetector
 from WSItools.patch_extraction.pairwise_patch_extractor import PairwiseExtractorParameters, PairwisePatchExtractor
 

@@ -296,8 +296,8 @@ if __name__ == '__main__':
     #float_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
     float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/"
 
-    from wsitools.file_managment.wsi_case_manager import WSI_CaseManager   # import dependent packages
-    from wsitools.file_managment.offset_csv_manager import OffsetCSVManager
+    from wsitools.file_management.wsi_case_manager import WSI_CaseManager   # import dependent packages
+    from wsitools.file_management.offset_csv_manager import OffsetCSVManager
     from wsitools.tissue_detection.tissue_detector import TissueDetector
 
     case_mn = WSI_CaseManager()
@@ -308,8 +308,10 @@ if __name__ == '__main__':
     offset_csv_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/registration_offsets.csv"
     offset_csv_mn = OffsetCSVManager(offset_csv_fn)
     offset_tmp, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
+    state_indicator = 1
     if state_indicator == 0 or state_indicator == 1:     # Auto registration does not exist
-        tissue_detector = TissueDetector("GNB", threshold=0.5)
+        gnb_training_tsv = "../file_management/tissue_detection/tissue_others.tsv"
+        tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_tsv)
         matcher_parameters = MatcherParameters()
         matcher = WSI_Matcher(tissue_detector, matcher_parameters)
         offset = matcher.match(fixed_wsi, float_wsi)

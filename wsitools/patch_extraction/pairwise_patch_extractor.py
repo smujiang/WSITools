@@ -235,8 +235,8 @@ if __name__ == "__main__":
     float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean"
     gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/tissue_others.tsv"
 
-    from wsitools.file_managment.wsi_case_manager import WSI_CaseManager  # # import dependent packages
-    from wsitools.file_managment.offset_csv_manager import OffsetCSVManager
+    from wsitools.file_management.wsi_case_manager import WSI_CaseManager  # # import dependent packages
+    from wsitools.file_management.offset_csv_manager import OffsetCSVManager
     from wsitools.tissue_detection.tissue_detector import TissueDetector
 
     tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_files)
@@ -246,7 +246,7 @@ if __name__ == "__main__":
     _, fixed_wsi_uuid, _ = case_mn.get_wsi_fn_info(fixed_wsi)
     _, float_wsi_uuid, _ = case_mn.get_wsi_fn_info(float_wsi)
     # offset_csv_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/registration_offsets.csv"
-    offset_csv_fn = "../file_managment/example/wsi_pair_offset.csv"
+    offset_csv_fn = "../file_management/example/wsi_pair_offset.csv"
 
     offset_csv_mn = OffsetCSVManager(offset_csv_fn)
     offset, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
