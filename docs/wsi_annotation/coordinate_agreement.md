@@ -1,5 +1,5 @@
 
-
+### Work with single WSI
 ![Architecture](../imgs/coord_1.png)
 Example code snippet
 ```python
@@ -24,7 +24,7 @@ for idx, lx in enumerate(loc_x):
     plt.show()
 ```
 
-When working with a pair of whole slide image
+### Work with a pair of whole slide image
 ![Architecture](../imgs/coord_2.png)
 Example code snippet
 ```python
