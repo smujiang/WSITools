@@ -62,14 +62,15 @@ class PatchExtractor:
         return thumbnail
 
     def get_patch_locations(self, wsi_thumb_mask):
+        print(wsi_thumb_mask.shape)
         pos_indices = np.where(wsi_thumb_mask > 0)
         if self.sample_cnt == -1:  # sample all the image patches
-            loc_y = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
-            loc_x = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
+            loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
+            loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
         else:
             xy_idx = np.random.choice(pos_indices[0].shape[0], self.sample_cnt)
-            loc_y = np.array(pos_indices[1][xy_idx] * self.rescale_rate).astype(np.int)
-            loc_x = np.array(pos_indices[0][xy_idx] * self.rescale_rate).astype(np.int)
+            loc_y = np.array(pos_indices[0][xy_idx] * self.rescale_rate).astype(np.int)
+            loc_x = np.array(pos_indices[1][xy_idx] * self.rescale_rate).astype(np.int)
         return [loc_x, loc_y]
 
     @staticmethod
@@ -114,14 +115,14 @@ class PatchExtractor:
             tf_fp = self.generate_tfRecord_fp(case_info, self.feature_map)
         [loc_x, loc_y] = indices
         for idx, lx in enumerate(loc_x):
-            # if logging.DEBUG == logging.root.level:
-            #     import matplotlib.pyplot as plt
-            #     plt.figure(1)
-            #     plt.plot(loc_y, loc_x, 'r.')
-            #     plt.plot(loc_y[idx], lx, 'go')
-            #     plt.gca().invert_yaxis()
-            #     plt.show()
-            patch = wsi_obj.read_region((loc_y[idx], lx), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
+            if logging.DEBUG == logging.root.level:
+                import matplotlib.pyplot as plt
+                plt.figure(1)
+                plt.plot(loc_x, loc_y, 'r.')
+                plt.plot(loc_x[idx], loc_y[idx], 'go')
+                plt.gca().invert_yaxis()
+                plt.show()
+            patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
             Content_rich = True
             if self.patch_filter_by_area:  # if we need to filter the image patch
                 Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=0.5)
@@ -136,7 +137,7 @@ class PatchExtractor:
                         plt.figure(1)
                         plt.imshow(patch)
                         plt.show()
-                    fn = self.generate_patch_fn(case_info, (loc_y[idx], lx))
+                    fn = self.generate_patch_fn(case_info, (loc_x[idx], loc_y[idx]))
                     if self.save_format == ".jpg":
                         patch.convert("RGB").save(fn)
                     elif self.save_format == ".png":

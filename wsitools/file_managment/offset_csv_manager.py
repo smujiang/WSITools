@@ -12,7 +12,7 @@ class OffsetCSVManager:
         auto_offset_dict = {}
         gt_offset_dict = {}
         self.lines = open(offset_table_csv_fn, 'r').readlines()
-        for l in self.lines[1:-1]:  # skip the first line
+        for l in self.lines[1:]:  # skip the first line
             if l.strip():
                 ele = l.split(",")
                 auto_offset_dict[ele[0]] = (ele[1], ele[2], ele[3])

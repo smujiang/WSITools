@@ -67,14 +67,17 @@ class PairwisePatchExtractor:
         return thumbnail_fixed, thumbnail_float
 
     def get_patch_locations(self, wsi_thumb_mask):
+        # ********************************************************
+        # Note x, y coordinate order are reversed
+        # ********************************************************
         pos_indices = np.where(wsi_thumb_mask > 0)
         if self.sample_cnt == -1:  # sample all the image patches
-            loc_y = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
-            loc_x = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
+            loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)   # row
+            loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)   # column
         else:
             xy_idx = np.random.choice(pos_indices[0].shape[0], self.sample_cnt)
-            loc_y = np.array(pos_indices[1][xy_idx] * self.rescale_rate).astype(np.int)
-            loc_x = np.array(pos_indices[0][xy_idx] * self.rescale_rate).astype(np.int)
+            loc_y = np.array(pos_indices[0][xy_idx] * self.rescale_rate).astype(np.int)  # row
+            loc_x = np.array(pos_indices[1][xy_idx] * self.rescale_rate).astype(np.int)  # column
         return [loc_x, loc_y]
 
     @staticmethod
@@ -140,37 +143,42 @@ class PairwisePatchExtractor:
         if self.with_feature_map:
             tf_fp = self.generate_tfRecord_fp(fixed_case_info, self.feature_map)
         [loc_x, loc_y] = indices
-        for idx, lx in enumerate(loc_x):
-            fixed_patch = fixed_wsi_obj.read_region((loc_y[idx], lx), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
-            float_patch = float_wsi_obj.read_region((int(loc_y[idx]+offset[0]), int(lx+offset[1])), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
-
+        for idx, ly in enumerate(loc_y):
+            fixed_patch = fixed_wsi_obj.read_region((loc_x[idx], ly), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
+            float_patch = float_wsi_obj.read_region((int(loc_x[idx]+offset[0]), int(ly+offset[1])), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
             # if logging.DEBUG == logging.root.level:
             #     import matplotlib.pyplot as plt
             #     fig, ax = plt.subplots(2, 1)
-            #     ax[0].plot(loc_y, loc_x, 'g.')
-            #     ax[0].plot(loc_y[idx], lx, 'r.')
+            #     ax[0].plot(loc_x, loc_y, 'g.')
+            #     ax[0].plot(loc_x[idx], ly, 'r.')
             #     ax[0].set_xlim([0, fixed_wsi_obj.dimensions[0]])
             #     ax[0].set_ylim([0, fixed_wsi_obj.dimensions[1]])
             #     ax[0].invert_yaxis()
-            #     ax[1].plot(np.array(loc_y)+offset[0], np.array(loc_x)+offset[1], 'g.')
-            #     ax[1].plot(int(loc_y[idx]+offset[0]), int(lx+offset[1]), 'bo')
+            #     ax[1].plot(np.array(loc_x)+offset[0], np.array(loc_y)+offset[1], 'g.')
+            #     ax[1].plot(int(loc_x[idx]+offset[0]), int(ly+offset[1]), 'bo')
             #     ax[1].set_xlim([0, float_wsi_obj.dimensions[0]])
             #     ax[1].set_ylim([0, float_wsi_obj.dimensions[1]])
             #     ax[1].invert_yaxis()
             #     plt.show()
             Content_rich = True
+            # if logging.DEBUG == logging.root.level:
+            #     import matplotlib.pyplot as plt
+            #     fig, ax = plt.subplots(2, 1)
+            #     ax[0].imshow(fixed_patch)
+            #     ax[1].imshow(float_patch)
+            #     plt.show()
             if self.patch_filter_by_area:  # if we need to filter the image patch
                 Content_rich = self.filter_by_content_area(np.array(fixed_patch), area_threshold=0.5) and \
                                self.filter_by_content_area(np.array(float_patch), area_threshold=0.5)
             if Content_rich:
                 patch_cnt += 1
-                logging.debug("extract from fixe image: %d %d and float image: %d %d" % (loc_y[idx], lx, int(loc_y[idx] + offset[0]), int(lx + offset[1])))
+                logging.debug("extract from fixe image: %d %d and float image: %d %d" % (loc_x[idx], ly, int(loc_x[idx] + offset[0]), int(ly + offset[1])))
                 if self.with_feature_map:  # Append patch to tfRecord file
                     # tf_fp.append()
                     # TODO:
                     print("TODO: Append patch to tfRecord file %s" % tf_fp)
                 else:  # save patch to jpg, with label text and id in file name
-                    fn = self.generate_patch_fn(fixed_case_info, (loc_y[idx], lx))
+                    fn = self.generate_patch_fn(fixed_case_info, (loc_x[idx], ly))
                     if self.save_format == ".jpg":
                         fixed_patch_arr = np.array(fixed_patch.convert("RGB"))
                         fixed_patch_arr[np.any(fixed_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
@@ -178,12 +186,12 @@ class PairwisePatchExtractor:
                         float_patch_arr[np.any(float_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
                         comb_arr = np.concatenate([fixed_patch_arr[:, :, :3], float_patch_arr[:, :, :3]], axis=1)
                         Image.fromarray(comb_arr, 'RGB').save(fn)
-                        if logging.DEBUG == logging.root.level:
-                            import matplotlib.pyplot as plt
-                            fig, ax = plt.subplots(2, 1)
-                            ax[0].imshow(fixed_patch_arr)
-                            ax[1].imshow(float_patch_arr)
-                            plt.show()
+                        # if logging.DEBUG == logging.root.level:
+                        #     import matplotlib.pyplot as plt
+                        #     fig, ax = plt.subplots(2, 1)
+                        #     ax[0].imshow(fixed_patch_arr)
+                        #     ax[1].imshow(float_patch_arr)
+                        #     plt.show()
 
                     elif self.save_format == ".png":
                         # TODO: combine the patch and save in a png image
@@ -200,14 +208,14 @@ class PairwisePatchExtractor:
         thumbnail_fixed, thumbnail_float = self.get_thumbnails(fixed_wsi_obj, float_wsi_obj)    # get the thumbnail
         fixed_wsi_thumb_mask = self.tissue_detector.predict(thumbnail_fixed)   # get the foreground thumbnail mask
         intersection_indices = self.exclude_patch_out_of_bond(self.get_patch_locations(fixed_wsi_thumb_mask), offset, self.patch_size, float_case_info['dim'])
-        # if logging.DEBUG == logging.root.level:
-        #     print("%d patches need to be extracted" % len(intersection_indices[0]))
-        #     import matplotlib.pyplot as plt
-        #     fig, ax = plt.subplots(3, 1)
-        #     ax[0].imshow(thumbnail_fixed)
-        #     ax[1].imshow(thumbnail_float)
-        #     ax[2].imshow(fixed_wsi_thumb_mask, cmap='gray')
-        #     plt.show()
+        if logging.DEBUG == logging.root.level:
+            print("%d patches need to be extracted" % len(intersection_indices[0]))
+            import matplotlib.pyplot as plt
+            fig, ax = plt.subplots(3, 1)
+            ax[0].imshow(thumbnail_fixed)
+            ax[1].imshow(thumbnail_float)
+            ax[2].imshow(fixed_wsi_thumb_mask, cmap='gray')
+            plt.show()
         if not self.with_anno:
             return self.save_patch_without_annotation(fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, intersection_indices)
         else:
@@ -222,7 +230,8 @@ if __name__ == "__main__":
 
     # fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
     # float_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
-    fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/d83cc7d1c941438e93786fc381ab5bb5.tiff"
+    # fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/d83cc7d1c941438e93786fc381ab5bb5.tiff"
+    fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a56844d695e9579bce8f0335.tiff"
     float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean"
     gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/tissue_others.tsv"
 
@@ -236,7 +245,9 @@ if __name__ == "__main__":
     float_wsi = case_mn.get_counterpart_fn(fixed_wsi, float_wsi_root_dir)
     _, fixed_wsi_uuid, _ = case_mn.get_wsi_fn_info(fixed_wsi)
     _, float_wsi_uuid, _ = case_mn.get_wsi_fn_info(float_wsi)
-    offset_csv_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/registration_offsets.csv"
+    # offset_csv_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/registration_offsets.csv"
+    offset_csv_fn = "../file_managment/example/wsi_pair_offset.csv"
+
     offset_csv_mn = OffsetCSVManager(offset_csv_fn)
     offset, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
     if state_indicator == 0:
