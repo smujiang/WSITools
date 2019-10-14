@@ -292,7 +292,8 @@ class WSI_Matcher:
 
 # example
 if __name__ == '__main__':
-    fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
+    # fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
+    fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a56844d695e9579bce8f0335.tiff"
     #float_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
     float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/"
 
@@ -310,7 +311,7 @@ if __name__ == '__main__':
     offset_tmp, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
     state_indicator = 1
     if state_indicator == 0 or state_indicator == 1:     # Auto registration does not exist
-        gnb_training_tsv = "../file_management/tissue_detection/tissue_others.tsv"
+        gnb_training_tsv = "../tissue_detection/model_files/tissue_others.tsv"
         tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_tsv)
         matcher_parameters = MatcherParameters()
         matcher = WSI_Matcher(tissue_detector, matcher_parameters)
