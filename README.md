@@ -12,7 +12,7 @@ python setup.py install
 We provide examples for [Patch Extraction](docs/patch_extraction/patch_extraction.md) and [Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md). Multiple processing is available for multiple WSIs extractions.
 
 ## Descriptions
-WSITools is a whole slide image processing tool kit. It provide efficient way to extract patches from whole slide images, and some other useful features for pathological image processing.
+WSITools is a whole slide image processing tool kit. It provides efficient ways to extract patches from whole slide images, and some other useful features for pathological image processing.
 Current, it supports four patch extraction scenarios:
 1. extract patches from WSIs (P)
 2. extract patches and their labels from WSIs and their annotations (P+L)
