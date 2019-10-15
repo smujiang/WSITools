@@ -24,6 +24,7 @@ print("%d Patches have been save to %s" % (patch_num, output_dir))
 ```
 
 ### Extract patches from a list of WSIs, save to PNG files
+All the file names of WSIs to be processed can be listed in a text file [(example)](../../wsitools/file_management/example/case_list.txt), so that it can be easily managed.
 Multiprocessing can be adopted to accelerate the extraction.
 ```python
 from wsitools.tissue_detection.tissue_detector import TissueDetector 
