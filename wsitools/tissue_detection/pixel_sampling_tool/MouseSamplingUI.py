@@ -49,7 +49,7 @@ class StainPenMarking(QWidget):
         self.MouseRightPress = False
         self.setWindowTitle('Tissue Annotation')
 
-        sv_tsv = "H:\\model\\my_anno.tsv"
+        sv_tsv = "H:\\my_anno.tsv"
         self.EditSaveTSV.setText(sv_tsv)
         if not os.path.exists(sv_tsv):
             try:
@@ -65,7 +65,9 @@ class StainPenMarking(QWidget):
         print(filename)
         if os.path.exists(filename):
             self.EditImgName.setText(filename)
-            Img = Image.open(filename).convent("RGB")
+            # Img = Image.open(filename).convent("RGB")
+            Img = Image.open(filename)
+
             base_size = 800
             if Img.size[0] > Img.size[1]:
                 wpercent = (base_size / float(Img.size[0]))
@@ -154,7 +156,7 @@ class StainPenMarking(QWidget):
     def openWSIDialog(self):
         dialog = QFileDialog(self, "Select a image")
         dialog.setFileMode(QFileDialog.AnyFile)
-        dialog.setNameFilter(str("Images (*.jpg)"))
+        # dialog.setNameFilter(str("Images (*.npg/*jpg)"))
         dialog.setViewMode(QFileDialog.Detail)
         if dialog.exec_():
             fileNames = dialog.selectedFiles()
