@@ -23,7 +23,7 @@ For now,
 * We can only save the extracted patches into PNG/JPG files. We are working on saving them into tfRecords.
 * We are working on adding annotation labels into patch extraction.
 
-Beside, several useful functions are available.
+Besides, several useful features are also available for advance users.
 1. Detect tissue in a WSI
 2. Export and parsing annotation from [QuPath](https://qupath.github.io/) and [Aperio Image Scope](https://www.leicabiosystems.com/digital-pathology/manage/aperio-imagescope/) 
 3. WSI rigid registration 
