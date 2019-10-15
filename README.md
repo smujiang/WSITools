@@ -27,8 +27,8 @@ For now,
 ![Architecture](docs/imgs/arch.png)
 ## Documents
 [Tissue Detection](docs/tissue_detection/tissue_detector.md)   
-[Patch Extraction](docs/patch_extraction/patch_extraction.md)
-[WSI Alignment](docs/wsi_registration/wsi_registration.md)       
-[Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md)
+[Patch Extraction](docs/patch_extraction/patch_extraction.md)   
+[WSI Alignment](docs/wsi_registration/wsi_registration.md)          
+[Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md)   
 [Annotate with QuPath and Export Annotations](docs/wsi_annotation/QuPath_scripts/readme.md)
 
