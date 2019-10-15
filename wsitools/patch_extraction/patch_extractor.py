@@ -107,16 +107,6 @@ class PatchExtractor:
         writer = tf.python_io.TFRecordWriter(fn)  # generate tfRecord file handle
         return writer, fn
 
-    # TODO: customize the feature map, maybe need another class
-    def update_feature_map(self, key_values):
-        def _int64_feature(value):
-            return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
-
-        def _bytes_feature(value):
-            return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
-        self.feature_map = {'train/label': _int64_feature(key_values["label"]),
-                            'train/image': _bytes_feature(tf.compat.as_bytes(key_values["image"].tobytes()))}
-
     # get image patches and write to files
     def save_patch_without_annotation(self, wsi_obj, case_info, indices):
         patch_cnt = 0
@@ -137,15 +127,16 @@ class PatchExtractor:
                 Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=0.5)
             if Content_rich:
                 patch_cnt += 1
-                if self.with_feature_map:  # Append patch to tfRecord file
-                    # print("Append patch to tfRecord file %s" % tf_fn)
+                if self.with_feature_map:  # Append data to tfRecord file
                     # TODO: write the data into the customized key-value map, maybe need to implement in another class
-                    key_values = {"image": patch, "label": 1}
-                    self.update_feature_map(key_values)
-                    # Create an example protocol buffer
-                    example = tf.train.Example(features=tf.train.Features(feature=self.feature_map))
-                    # Serialize to string and write on the file
-                    tf_writer.write(example.SerializeToString())
+                    # key_values = {"image": patch.tobytes(), "img_mode": "RGB",
+                    #               "loc_x": int(loc_x[idx]), "loc_y": int(loc_y[idx]),
+                    #               "img_w": 256, "img_h": 256,
+                    #               "label_text": "cell", "label_id": 1}
+                    # features = self.feature_map.update_feature_map(key_values)
+                    features = self.feature_map.update_feature_map_eval()
+                    example = tf.train.Example(features=tf.train.Features(feature=features))  # Create an example protocol buffer
+                    tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
                 else:  # save patch to jpg, with label text and id in file name
                     if logging.DEBUG == logging.root.level:
                         import matplotlib.pyplot as plt
@@ -188,29 +179,47 @@ class PatchExtractor:
 if __name__ == "__main__":
     logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.DEBUG)
     # logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p', level=logging.ERROR)
+
+    # example of single case
     wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
     # wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/d83cc7d1c941438e93786fc381ab5bb5.tiff"
     # wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
     gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/HE_tissue_others.tsv"
 
     from wsitools.tissue_detection.tissue_detector import TissueDetector  # import dependent packages
+    from wsitools.patch_extraction.feature_map_creator import FeatureMapCreator
 
     tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_files)
 
     # extract patches without annotation, no feature map specified and save patches to '.jpg'
     output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
 
-    # Save to JPG/PNG files
+    # # Save to JPG/PNG files
     # parameters = ExtractorParameters(output_dir, save_format='.png', sample_cnt=-1)
     # patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
     # patch_num = patch_extractor.extract(wsi_fn)
 
-    # Save to tfRecords
-    parameters = ExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)
-    patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map="", annotations=None)
-    patch_num = patch_extractor.extract(wsi_fn)
+    # # Save to tfRecords
+    # fm = FeatureMapCreator("./feature_maps/basic_fm_P_eval.csv")
+    # parameters = ExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)
+    # patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=None)
+    # patch_num = patch_extractor.extract(wsi_fn)
+    # print("%d Patches have been save to %s" % (patch_num, output_dir))
 
-    print("%d Patches have been save to %s" % (patch_num, output_dir))
+    # example of multiple cases
+    from wsitools.file_management.case_list_manager import CaseListManager
+    import multiprocessing
+
+    case_list_txt = "/projects/shart/digital_pathology/data/PenMarking/WSIs/annotated_cases.txt"
+    case_mn = CaseListManager(case_list_txt)
+    all_wsi_fn = case_mn.case_list
+    parameters = ExtractorParameters(output_dir, save_format='.png', sample_cnt=-1)
+    patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
+
+    multiprocessing.set_start_method('spawn')
+    pool = multiprocessing.Pool(processes=4)
+    pool.map(patch_extractor.extract, all_wsi_fn)
+
 
 
 
