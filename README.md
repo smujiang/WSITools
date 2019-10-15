@@ -12,7 +12,7 @@ python setup.py install
 We provide examples for [Patch Extraction](docs/patch_extraction/patch_extraction.md) and [Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md). Multiple processing is available for multiple WSIs extractions.
 
 ## Descriptions
-WSITools is a whole slide image pre-processing kit. It provide efficient way to extract patches from whole slide images.
+WSITools is a whole slide image processing tool kit. It provide efficient way to extract patches from whole slide images, and some other useful features for pathological image processing.
 Current, it supports four patch extraction scenarios:
 1. extract patches from WSIs (P)
 2. extract patches and their labels from WSIs and their annotations (P+L)
@@ -22,6 +22,13 @@ Current, it supports four patch extraction scenarios:
 For now,
 * We can only save the extracted patches into PNG/JPG files. We are working on saving them into tfRecords.
 * We are working on adding annotation labels into patch extraction.
+
+Beside, several useful functions are available.
+1. Detect tissue in a WSI
+2. Export and parsing annotation from [QuPath](https://qupath.github.io/) and [Aperio Image Scope](https://www.leicabiosystems.com/digital-pathology/manage/aperio-imagescope/) 
+3. WSI rigid registration 
+4. Reconstruct the whole slide image from the processed image patches
+
 
 ## Architectures
 ![Architecture](docs/imgs/arch.png)
