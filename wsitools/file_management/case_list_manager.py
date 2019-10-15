@@ -11,7 +11,7 @@ class CaseListManager:
         lines = open(case_list_txt, 'r').readlines()
         for l in lines:
             if l.strip():
-                if os.path.splitext(l.strip()) == ext:
+                if os.path.splitext(l.strip())[1] == ext:
                     uuid = os.path.split(l.strip())[1][0:-(len(ext)+1)]  # file name without ext
                     self.case_list.append(l.strip())
                     self.case_uuid_list.append(uuid)
