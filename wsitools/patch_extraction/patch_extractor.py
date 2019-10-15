@@ -206,7 +206,7 @@ if __name__ == "__main__":
     # patch_num = patch_extractor.extract(wsi_fn)
     # print("%d Patches have been save to %s" % (patch_num, output_dir))
 
-    # example of multiple cases
+    # #example of multiple cases
     from wsitools.file_management.case_list_manager import CaseListManager
     import multiprocessing
 
