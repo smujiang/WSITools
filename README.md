@@ -20,7 +20,7 @@ Current, it supports four patch extraction scenarios:
 4. extract patches and their labels from WSIs as well as their counterparts with their annotations (P+P'+L)
 
 For now,
-* We can only save the extracted patches into PNG/JPG files. We are working on saving them into tfRecords.
+* We need to validate saved tfRecords.
 * We are still working on adding annotation labels into patch extraction.
 
 Besides, several useful features are also available for advance users.
