@@ -3,7 +3,7 @@ import os
 from scipy import ndimage
 from skimage.color import rgb2lab
 from sklearn.naive_bayes import GaussianNB
-from sklearn.externals import joblib
+import joblib
 
 class TissueDetector:
     def __init__(self, name, threshold=0.5, training_files=""):

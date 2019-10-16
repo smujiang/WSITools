@@ -19,6 +19,7 @@ setup(
         'scipy',
         'openslide-python',
         'shapely',
-        'pillow'
+        'pillow',
+        'joblib'
     ]
 )
