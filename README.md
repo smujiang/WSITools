@@ -7,37 +7,80 @@ git clone https://github.com/smujiang/WSITools.git
 cd WSITools
 python setup.py install
 ```
-* Note that when you install our package, the dependencies can be automatically installed, but you may need to install the dependent [OpenSlide](https://openslide.org/) library.
+* Note that when you install our package, the dependencies can be automatically installed, but you may need to install 
+the dependent [OpenSlide](https://openslide.org/) library.
+  * If using `PyCharm` or `venv` on Windows:
+    1. Download the correct [binary](https://openslide.org/download/#windows-binaries) file for your system
+    2. Copy all files from `/bin` into your `venv/Scripts/` directory
+    
 ### Testing
-We provide examples for [Patch Extraction](docs/patch_extraction/patch_extraction.md) and [Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md). You can choose to save the extracted patches into PNG/JPG files or [tfRecords](https://www.tensorflow.org/tutorials/load_data/tfrecord).
-Multiple processing is available for multiple WSIs extractions.
+We provide examples for [Patch Extraction](docs/patch_extraction/patch_extraction.md) and 
+[Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md). You can choose to save the extracted 
+patches into PNG/JPG files or [tfRecords](https://www.tensorflow.org/tutorials/load_data/tfrecord).
 
-If you just want to extract patches from a WSI, and save them into JPG/PNG files, it just requires **less than 8 lines** of python code.
+If you just want to extract patches from a WSI, and save them into JPG/PNG files, it needs only a few lines of code:
 ```python
+# Import the relevant libraries from this module
 from wsitools.tissue_detection.tissue_detector import TissueDetector
 from wsitools.patch_extraction.patch_extractor import ExtractorParameters, PatchExtractor
+import multiprocessing
 
-wsi_fn = "/data/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
-output_dir = "/data/WSIs_extraction"
+#Define some run parameters
+num_processors = 20                     # Number of processes that can be running at once
+wsi_fn = "/path/2/file.tff"             # Define a sample image that can be read by OpenSlide
+output_dir = "/data/WSIs_extraction"    # Define an output directory
 
-tissue_detector = TissueDetector("LAB_Threshold", threshold=85)
-parameters = ExtractorParameters(output_dir, save_format='.png', sample_cnt=-1)
-patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
-patch_num = patch_extractor.extract(wsi_fn)
+# Define the parameters for Patch Extraction, including generating an thumbnail from which to traverse over to find 
+# tissue.
+parameters = ExtractorParameters(output_dir, # Where the patches should be extracted to
+    save_format = '.png',                      # Can be '.jpg', '.png', or '.tfrecords'              
+    sample_cnt = -1,                           # Limit the number of patches to extract (-1 == all patches)
+    patch_size = 128,                          # Size of patches to extract (Height & Width)
+    rescale_rate = 128,                        # Fold size to scale the thumbnail to (for faster processing)
+    patch_filter_by_area = 0.5,                # Amount of tissue that should be present in a patch
+    with_anno = True,                          # If true, you need to supply an additional XML file
+    extract_layer = 0                          # OpenSlide Level
+    )
+
+# Choose a method for detecting tissue in thumbnail image
+tissue_detector = TissueDetector("LAB_Threshold",   # Can be LAB_Threshold or GNB
+    threshold = 85,                                   # Number from 1-255, anything less than this number means there is tissue
+    training_files = None                             # Training file for GNB-based detection
+    )
+
+# Create the extractor object
+patch_extractor = PatchExtractor(tissue_detector, 
+    parameters, 
+    feature_map = None,                       # See note below                     
+    annotations = None                        # Object of Annotation Class (see other note below)
+    )
+
+# Run the extraction process
+multiprocessing.set_start_method('spawn')
+pool = multiprocessing.Pool(processes = num_processors)
+pool.map(patch_extractor.extract, [wsi_fn])
+
 ```
-## Descriptions
-WSITools is a whole slide image processing tool kit. It provides efficient ways to extract patches from whole slide images, and some other useful features for pathological image processing.
-Current, it supports four patch extraction scenarios:
-1. extract patches from WSIs (P)
-2. extract patches and their labels from WSIs and their annotations (P+L)
-3. extract patches and their labels from WSIs as well as their counterparts (P+P')
-4. extract patches and their labels from WSIs as well as their counterparts with their annotations (P+P'+L)
+> See [Feature Maps](docs/patch_extraction/feature_map.md) for more detail
 
-Besides, several useful features are also available for advance users.
+> See [Annotation Objects](docs/patch_extraction/annotation.md) for more detail
+
+## Descriptions
+WSITools is a whole slide image processing toolkit. It provides efficient ways to extract patches from whole slide 
+images, and some other useful features for pathological image processing.
+Currently, it supports four patch extraction scenarios:
+1. Extract patches from WSIs
+2. Extract patches from WSIs and their label (i.e. their directory name)
+    1. TODO: Incomplete
+3. Extract patches from a fixed and a float WSI
+4. Extract patches from a fixed and a float WSI in places that intersect annotation objects
+    1. TODO: Incomplete
+
+## Additional Features
 1. Detect tissue in a WSI
 2. Export and parsing annotation from [QuPath](https://qupath.github.io/) and [Aperio Image Scope](https://www.leicabiosystems.com/digital-pathology/manage/aperio-imagescope/) 
-3. WSI rigid registration 
-4. Reconstruct the whole slide image from the processed image patches
+3. WSI registration for image pairs [[Paper]](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0220074)
+4. Reconstruct WSI from the processed image patches
 
 ## Architectures
 ![Architecture](docs/imgs/arch.png)
@@ -49,5 +92,5 @@ Besides, several useful features are also available for advance users.
 [Annotate with QuPath and Export Annotations](docs/wsi_annotation/QuPath_scripts/readme.md)
 
 ## TODO list
-* Validate saved tfRecords.
+* Validate saved tfrecords.
 * Add annotation labels into patch extraction.

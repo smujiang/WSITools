@@ -6,11 +6,12 @@ import logging
 import tensorflow as tf
 
 class ExtractorParameters:
-    def __init__(self,  save_dir, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=True, with_anno=True, rescale_rate=128, patch_size=128, extract_layer=0):
+    def __init__(self,  save_dir, save_format=".tfrecords", sample_cnt=-1, patch_filter_by_area=None, with_anno=True,
+                 rescale_rate=128, patch_size=128, extract_layer=0):
         if save_dir is None:    # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
         self.save_dir = save_dir
-        self.save_format = save_format  # Save to tfRecord or jpg
+        self.save_format = save_format  # Save to tfrecords or jpg
         self.with_anno = with_anno  # extract with annotation or not
         self.rescale_rate = rescale_rate  # rescale to get the thumbnail
         self.patch_size = patch_size  # patch numbers per image level
@@ -31,11 +32,11 @@ class PatchExtractor:
         self.sample_cnt = parameters.sample_cnt
         self.feature_map = feature_map
         self.annotations = annotations
-        if self.save_format == ".tfRecord":   #tfRecord
+        if self.save_format == ".tfrecords":   #tfrecords
             if feature_map is not None:
                 self.with_feature_map = True
-            else:  # feature map for tfRecords, if save_format is ".tfRecord", it can't be None
-                raise Exception("No feature map can refer to create tfRecord")
+            else:  # feature map for tfrecords, if save_format is ".tfrecords", it can't be None
+                raise Exception("No feature map can refer to create tfrecords")
         else:
             if feature_map is not None:
                 logging.info("No need to specify feature mat")
@@ -124,7 +125,7 @@ class PatchExtractor:
             patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
             Content_rich = True
             if self.patch_filter_by_area:  # if we need to filter the image patch
-                Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=0.5)
+                Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=patch_filter_by_area)
             if Content_rich:
                 patch_cnt += 1
                 if self.with_feature_map:  # Append data to tfRecord file
@@ -176,8 +177,6 @@ if __name__ == "__main__":
 
     # example of single case
     wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
-    # wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/d83cc7d1c941438e93786fc381ab5bb5.tiff"
-    # wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
     gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/HE_tissue_others.tsv"
 
     from wsitools.tissue_detection.tissue_detector import TissueDetector  # import dependent packages
@@ -193,9 +192,9 @@ if __name__ == "__main__":
     # patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
     # patch_num = patch_extractor.extract(wsi_fn)
 
-    # # Save to tfRecords
+    # # Save to tfrecords
     fm = FeatureMapCreator("./feature_maps/basic_fm_P_eval.csv")
-    parameters = ExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)
+    parameters = ExtractorParameters(output_dir, save_format='.tfrecords', sample_cnt=-1)
     patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=None)
     patch_num = patch_extractor.extract(wsi_fn)
     print("%d Patches have been save to %s" % (patch_num, output_dir))
