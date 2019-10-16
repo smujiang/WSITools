@@ -1,5 +1,7 @@
-2. save tfrecord be optional
-3. save annotation labels into jpg/png files
-4. save annotation lables and masks into tfRecords
+1. save tfRecord
+    a. add documentation to explain ./feature_maps/*_eval.csv
+    a. validate tfRecord files
+2. save annotation labels into jpg/png files
+3. save annotation labels and masks into tfRecords
 
 
