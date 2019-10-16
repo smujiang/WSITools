@@ -1,4 +1,6 @@
 key,data_type,eval,description
+label_id,int,int(label_id),label ID
+label_text,bytes,label_txt.encode("utf8"),class label text
 loc_x_,int,int(loc_y[idx])
 loc_y_a,int,int(loc_y[idx])
 img_mode_a,bytes,"RGB".encode("utf8")

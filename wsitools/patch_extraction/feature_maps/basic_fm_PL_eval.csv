@@ -1,0 +1,17 @@
+key,data_type,eval,description
+label_id,int,int(label_id),label ID
+label_text,bytes,label_txt.encode("utf8"),class label text
+loc_x,int,int(loc_x[idx]),patch location x
+loc_y,int,int(loc_y[idx]),patch location y
+img_mode,bytes,"RGB".encode("utf8"),image mode
+img_w,int,self.patch_size,image width
+img_h,int,self.patch_size,image height
+image,bytes,patch.tobytes(),image data
+
+
+
+
+
+
+
+
