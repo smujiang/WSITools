@@ -48,6 +48,9 @@ pool = multiprocessing.Pool(processes=4)
 pool.map(patch_extractor.extract, all_wsi_fn)
 ```
 ## Extract patches from a single WSI, save to tfRecords
+TensorFlow tfRecord provide an efficient way to write and read structured data.
+If you would like to save the extracted patches and some other information into tfRecords, you may need to [customize your own feature map](./feature_map.md).
+
 ```python
 from wsitools.patch_extraction.patch_extractor import ExtractorParameters, PatchExtractor
 from wsitools.tissue_detection.tissue_detector import TissueDetector  # import dependent packages
