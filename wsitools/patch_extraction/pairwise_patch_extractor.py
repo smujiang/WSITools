@@ -4,6 +4,7 @@ import os,sys
 from skimage.color import rgb2lab
 from PIL import Image
 import logging
+import tensorflow as tf
 
 
 class PairwiseExtractorParameters:
@@ -32,10 +33,10 @@ class PairwisePatchExtractor:
         self.sample_cnt = parameters.sample_cnt
         self.feature_map = feature_map
         self.annotations = annotations
-        if self.save_format == ".tfrecord":   #tfRecord
+        if self.save_format == ".tfRecord":   #tfRecord
             if feature_map is not None:
                 self.with_feature_map = True
-            else:  # feature map for tfRecords, if save_format is ".tfrecord", it can't be None
+            else:  # feature map for tfRecords, if save_format is ".tfRecord", it can't be None
                 raise Exception("No feature map can refer to create tfRecord")
         else:
             if feature_map is not None:
@@ -110,10 +111,11 @@ class PairwisePatchExtractor:
             print("TODO: add label to file name")
         return fn
 
-    @staticmethod
-    def generate_tfRecord_fp(case_info, feature_map):
-        # TODO:
-        print("TODO: add label to file name")
+    def generate_tfRecord_fp(self, case_info):
+        tmp = case_info["fn_str"] + self.save_format
+        fn = os.path.join(self.save_dir, tmp)
+        writer = tf.python_io.TFRecordWriter(fn)  # create tfRecord file writer
+        return writer, fn
 
     @staticmethod
     def exclude_patch_out_of_bond(fixed_foreground_indices, offset, patch_size, float_wsi_size):
@@ -141,7 +143,7 @@ class PairwisePatchExtractor:
     def save_patch_without_annotation(self, fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, indices):
         patch_cnt = 0
         if self.with_feature_map:
-            tf_fp = self.generate_tfRecord_fp(fixed_case_info, self.feature_map)
+            tf_writer, tf_fn = self.generate_tfRecord_fp(fixed_case_info)
         [loc_x, loc_y] = indices
         for idx, ly in enumerate(loc_y):
             fixed_patch = fixed_wsi_obj.read_region((loc_x[idx], ly), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
@@ -174,28 +176,26 @@ class PairwisePatchExtractor:
                 patch_cnt += 1
                 logging.debug("extract from fixe image: %d %d and float image: %d %d" % (loc_x[idx], ly, int(loc_x[idx] + offset[0]), int(ly + offset[1])))
                 if self.with_feature_map:  # Append patch to tfRecord file
-                    # tf_fp.append()
                     # TODO:
-                    print("TODO: Append patch to tfRecord file %s" % tf_fp)
+                    # print("Append patch to tfRecord file %s" % tf_fn)
+                    values = []
+                    for eval_str in self.feature_map.eval_str:
+                        values.append(eval(eval_str))
+                    features = self.feature_map.update_feature_map_eval(values)
+                    example = tf.train.Example(
+                        features=tf.train.Features(feature=features))  # Create an example protocol buffer
+                    tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
                 else:  # save patch to jpg, with label text and id in file name
                     fn = self.generate_patch_fn(fixed_case_info, (loc_x[idx], ly))
+                    fixed_patch_arr = np.array(fixed_patch)
+                    # fixed_patch_arr[np.any(fixed_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
+                    float_patch_arr = np.array(float_patch)
+                    # float_patch_arr[np.any(float_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
+                    comb_arr = np.concatenate([fixed_patch_arr[:, :, :3], float_patch_arr[:, :, :3]], axis=1)
                     if self.save_format == ".jpg":
-                        fixed_patch_arr = np.array(fixed_patch.convert("RGB"))
-                        fixed_patch_arr[np.any(fixed_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
-                        float_patch_arr = np.array(float_patch.convert("RGB"))
-                        float_patch_arr[np.any(float_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
-                        comb_arr = np.concatenate([fixed_patch_arr[:, :, :3], float_patch_arr[:, :, :3]], axis=1)
                         Image.fromarray(comb_arr, 'RGB').save(fn)
-                        # if logging.DEBUG == logging.root.level:
-                        #     import matplotlib.pyplot as plt
-                        #     fig, ax = plt.subplots(2, 1)
-                        #     ax[0].imshow(fixed_patch_arr)
-                        #     ax[1].imshow(float_patch_arr)
-                        #     plt.show()
-
                     elif self.save_format == ".png":
-                        # TODO: combine the patch and save in a png image
-                        fixed_patch.save(fn)
+                        Image.fromarray(comb_arr, 'RGB').convert("RGBA").save(fn)
                     else:
                         raise Exception("Can't recognize save format")
             else:
@@ -281,13 +281,54 @@ if __name__ == "__main__":
     # patch_cnt = patch_extractor.extract(fixed_wsi, float_wsi, offset)
     # print("%d Patches have been save to %s" % (patch_cnt, output_dir))
 
-    # multiple processing
+    # # multiple processing
+    # from wsitools.file_management.wsi_case_manager import WSI_CaseManager  # # import dependent packages
+    # from wsitools.file_management.offset_csv_manager import OffsetCSVManager
+    # from wsitools.file_management.case_list_manager import CaseListManager
+    # from wsitools.tissue_detection.tissue_detector import TissueDetector
+    # import multiprocessing
+    #
+    # float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean"
+    #
+    # gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/HE_tissue_others.tsv"
+    # tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_files)
+    #
+    # offset_csv_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/registration_offsets.csv"
+    # offset_csv_mn = OffsetCSVManager(offset_csv_fn)
+    #
+    # case_list_txt = "/projects/shart/digital_pathology/data/PenMarking/WSIs/annotated_cases.txt"
+    # case_list_mn = CaseListManager(case_list_txt)
+    # all_fixed_wsi_fn = case_list_mn.case_list
+    #
+    # case_pair_mn = WSI_CaseManager()
+    #
+    # all_fixed_float_offset = []
+    # for fixed_wsi in all_fixed_wsi_fn:
+    #     float_wsi = case_pair_mn.get_counterpart_fn(fixed_wsi, float_wsi_root_dir)
+    #     _, fixed_wsi_uuid, _ = case_pair_mn.get_wsi_fn_info(fixed_wsi)
+    #     _, float_wsi_uuid, _ = case_pair_mn.get_wsi_fn_info(float_wsi)
+    #
+    #     offset, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
+    #     if state_indicator == 0:
+    #         raise Exception("No corresponding offset can be found in the file")
+    #     all_fixed_float_offset.append((fixed_wsi, float_wsi, offset[0], offset[1]))
+    #
+    # # extract pairs of patches without annotation, no feature map specified and save patches to '.jpg'
+    # output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
+    # parameters = PairwiseExtractorParameters(output_dir, save_format='.jpg', sample_cnt=-1)
+    # patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
+    #
+    # multiprocessing.set_start_method('spawn')
+    # pool = multiprocessing.Pool(processes=4)
+    # pool.map(patch_extractor.extract_parallel, all_fixed_float_offset)
+
+    #  # Save into tfRecords
     from wsitools.file_management.wsi_case_manager import WSI_CaseManager  # # import dependent packages
     from wsitools.file_management.offset_csv_manager import OffsetCSVManager
-    from wsitools.file_management.case_list_manager import CaseListManager
     from wsitools.tissue_detection.tissue_detector import TissueDetector
-    import multiprocessing
+    from wsitools.patch_extraction.feature_map_creator import FeatureMapCreator
 
+    fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
     float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean"
 
     gnb_training_files = "/projects/shart/digital_pathology/data/PenMarking/model/tissue_loc/HE_tissue_others.tsv"
@@ -296,31 +337,23 @@ if __name__ == "__main__":
     offset_csv_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/registration_offsets.csv"
     offset_csv_mn = OffsetCSVManager(offset_csv_fn)
 
-    case_list_txt = "/projects/shart/digital_pathology/data/PenMarking/WSIs/annotated_cases.txt"
-    case_list_mn = CaseListManager(case_list_txt)
-    all_fixed_wsi_fn = case_list_mn.case_list
+    fm = FeatureMapCreator("./feature_maps/basic_fm_PP_eval.csv")
 
-    case_pair_mn = WSI_CaseManager()
+    case_mn = WSI_CaseManager()
+    float_wsi = case_mn.get_counterpart_fn(fixed_wsi, float_wsi_root_dir)
+    _, fixed_wsi_uuid, _ = case_mn.get_wsi_fn_info(fixed_wsi)
+    _, float_wsi_uuid, _ = case_mn.get_wsi_fn_info(float_wsi)
 
-    all_fixed_float_offset = []
-    for fixed_wsi in all_fixed_wsi_fn:
-        float_wsi = case_pair_mn.get_counterpart_fn(fixed_wsi, float_wsi_root_dir)
-        _, fixed_wsi_uuid, _ = case_pair_mn.get_wsi_fn_info(fixed_wsi)
-        _, float_wsi_uuid, _ = case_pair_mn.get_wsi_fn_info(float_wsi)
-
-        offset, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
-        if state_indicator == 0:
-            raise Exception("No corresponding offset can be found in the file")
-        all_fixed_float_offset.append((fixed_wsi, float_wsi, offset[0], offset[1]))
+    offset, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
+    if state_indicator == 0:
+        raise Exception("No corresponding offset can be found in the file")
 
     # extract pairs of patches without annotation, no feature map specified and save patches to '.jpg'
     output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
-    parameters = PairwiseExtractorParameters(output_dir, save_format='.jpg', sample_cnt=-1)
-    patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
-
-    multiprocessing.set_start_method('spawn')
-    pool = multiprocessing.Pool(processes=4)
-    pool.map(patch_extractor.extract_parallel, all_fixed_float_offset)
+    parameters = PairwiseExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)
+    patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=None)
+    patch_cnt = patch_extractor.extract(fixed_wsi, float_wsi, offset)
+    print("%d Patches have been save to %s" % (patch_cnt, output_dir))
 
 
 

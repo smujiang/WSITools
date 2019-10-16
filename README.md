@@ -10,7 +10,7 @@ python setup.py install
 * Note that the dependencies can automatically installed, but you may need to install the dependent [OpenSlide](https://openslide.org/) library.
 ### Testing
 We provide examples for [Patch Extraction](docs/patch_extraction/patch_extraction.md) and [Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md). Multiple processing is available for multiple WSIs extractions.
-
+We can save the extracted patches into PNG/JPG files or [tfRecords](https://www.tensorflow.org/tutorials/load_data/tfrecord).
 ## Descriptions
 WSITools is a whole slide image processing tool kit. It provides efficient ways to extract patches from whole slide images, and some other useful features for pathological image processing.
 Current, it supports four patch extraction scenarios:
@@ -21,7 +21,7 @@ Current, it supports four patch extraction scenarios:
 
 For now,
 * We can only save the extracted patches into PNG/JPG files. We are working on saving them into tfRecords.
-* We are working on adding annotation labels into patch extraction.
+* We are still working on adding annotation labels into patch extraction.
 
 Besides, several useful features are also available for advance users.
 1. Detect tissue in a WSI

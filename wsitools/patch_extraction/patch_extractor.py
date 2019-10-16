@@ -101,7 +101,7 @@ class PatchExtractor:
             print("TODO: add label to file name")
         return fn
 
-    def generate_tfRecord_fp(self, case_info, feature_map):
+    def generate_tfRecord_fp(self, case_info):
         tmp = case_info["fn_str"] + self.save_format
         fn = os.path.join(self.save_dir, tmp)
         writer = tf.python_io.TFRecordWriter(fn)  # generate tfRecord file handle
@@ -111,7 +111,7 @@ class PatchExtractor:
     def save_patch_without_annotation(self, wsi_obj, case_info, indices):
         patch_cnt = 0
         if self.with_feature_map:
-            tf_writer, tf_fn = self.generate_tfRecord_fp(case_info, self.feature_map)
+            tf_writer, tf_fn = self.generate_tfRecord_fp(case_info)
         [loc_x, loc_y] = indices
         for idx, lx in enumerate(loc_x):
             # if logging.DEBUG == logging.root.level:
@@ -128,7 +128,7 @@ class PatchExtractor:
             if Content_rich:
                 patch_cnt += 1
                 if self.with_feature_map:  # Append data to tfRecord file
-                    # TODO: write the data into the customized key-value map, maybe need to implement in another class
+                    # TODO: maybe need to find another way to do this
                     values = []
                     for eval_str in self.feature_map.eval_str:
                         values.append(eval(eval_str))
@@ -143,13 +143,9 @@ class PatchExtractor:
                         plt.show()
                     fn = self.generate_patch_fn(case_info, (loc_x[idx], loc_y[idx]))
                     if self.save_format == ".jpg":
-                        if patch.mode == "RGBA":
-                            patch = patch.convert("RGB")
                         patch.save(fn)
                     elif self.save_format == ".png":
-                        if patch.mode == "RGB":
-                            patch = patch.convert("RGBA")
-                        patch.save(fn)
+                        patch.convert("RGBA").save(fn)
                     else:
                         raise Exception("Can't recognize save format")
             else:
