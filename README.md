@@ -7,7 +7,7 @@ git clone https://github.com/smujiang/WSITools.git
 cd WSITools
 python setup.py install
 ```
-* Note that the dependencies can automatically installed, but you may need to install the dependent [OpenSlide](https://openslide.org/) library.
+* Note that when you install our package, the dependencies can be automatically installed, but you may need to install the dependent [OpenSlide](https://openslide.org/) library.
 ### Testing
 We provide examples for [Patch Extraction](docs/patch_extraction/patch_extraction.md) and [Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md). You can choose to save the extracted patches into PNG/JPG files or [tfRecords](https://www.tensorflow.org/tutorials/load_data/tfrecord).
 Multiple processing is available for multiple WSIs extractions.
