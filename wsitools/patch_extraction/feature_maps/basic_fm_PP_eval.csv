@@ -1,4 +1,4 @@
-key,data_type,default_value
+key,data_type,eval
 loc_x_,int,int(loc_y[idx])
 loc_y_a,int,int(loc_y[idx])
 img_mode_a,bytes,"RGB".encode("utf8")

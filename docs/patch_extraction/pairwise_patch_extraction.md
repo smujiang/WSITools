@@ -87,6 +87,8 @@ pool.map(patch_extractor.extract_parallel, all_fixed_float_offset)
 ```
 
 ### Extract patches from a single pair of WSIs, and save into tfRecords
+TensorFlow tfRecord provide an efficient way to write and read structured data.
+If you would like to save the extracted patches and some other information into tfRecords, you may need to [customize your own feature map](./feature_map.md).
 ```python
 from wsitools.file_management.wsi_case_manager import WSI_CaseManager  # # import dependent packages
 from wsitools.file_management.offset_csv_manager import OffsetCSVManager

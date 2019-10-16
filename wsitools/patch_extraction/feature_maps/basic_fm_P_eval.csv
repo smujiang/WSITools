@@ -1,15 +1,7 @@
-key,data_type,eval
-loc_x,int,int(loc_x[idx])
-loc_y,int,int(loc_y[idx])
-img_mode,bytes,"RGB".encode("utf8")
-img_w,int,self.patch_size
-img_h,int,self.patch_size
-image,bytes,patch.tobytes()
-
-
-
-
-
-
-
-
+key,data_type,eval,description
+loc_x,int,int(loc_x[idx]),patch location x
+loc_y,int,int(loc_y[idx]),patch location y
+img_mode,bytes,"RGB".encode("utf8"),image mode
+img_w,int,self.patch_size,image width
+img_h,int,self.patch_size,image height
+image,bytes,patch.tobytes(),image data
