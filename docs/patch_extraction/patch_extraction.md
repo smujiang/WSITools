@@ -58,7 +58,6 @@ wsi_fn = "/data/8a26a55a78b947059da4e8c36709a828.tiff" # WSI file name
 gnb_training_files = "../tissue_detection/model_files/HE_tissue_others.tsv"
 tissue_detector = TissueDetector("GNB", threshold=0.5, training_files=gnb_training_files)
 
-# extract patches without annotation, no feature map specified and save patches to '.jpg'
 output_dir = "/data/wsi_patches"
 fm = FeatureMapCreator("./feature_maps/basic_fm_P_eval.csv")
 parameters = ExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)

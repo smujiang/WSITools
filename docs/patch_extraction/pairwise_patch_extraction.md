@@ -114,7 +114,6 @@ offset, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_u
 if state_indicator == 0:
     raise Exception("No corresponding offset can be found in the file")
 
-# extract pairs of patches without annotation, no feature map specified and save patches to '.jpg'
 output_dir = "/projects/temp"
 parameters = PairwiseExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)
 patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=None)
