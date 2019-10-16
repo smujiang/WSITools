@@ -17,7 +17,7 @@ The content of the csv file looks like below:
 2. The second column defines the data type saved into the tfRecords. We tested int and bytes only.
 3. The third column defines the script should be evaluated in python code with ```eval()```. In this column, each row denotes how the value will be assigned.
 Be aware, the name of variables should be the same as in [patch_extractor.py](../../wsitools/patch_extraction/patch_extractor.py
-) or [pairwise_patch_extractor.py](../../wsitools/patch_extraction/pairwise_patch_extractor.py).  
+) or [pairwise_patch_extractor.py](../../wsitools/patch_extraction/pairwise_patch_extractor.py). If the variable you need is not accessible in these two files, you may need to clone our code and modify as you wish.  
 4. The fourth column is the description of each feature to be saved into tfRecord.
 
 

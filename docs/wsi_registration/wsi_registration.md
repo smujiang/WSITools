@@ -1,8 +1,10 @@
 # WSI registration (Alignment)
-Occasionally, we need to scan the slide twice (scan the slide and then treat the slide with other chemicals and scan it again). In this scenario, we need to align the two WSI to establish the tissue correspondence of two scans.  
+WSI registration is necessary when we do pairwise WSIs analysis. Tissue correspondence can be established by aligning two WSIs. According to how we get the WSI pairs, two scenarios can be summarized:
+1. scan the slide and then treat the slide with other chemicals and scan it again
+2. scan a serials of slides on which are the continuous cuts of tissue.
 
-Ideally, this is a rigid image registration problem, just shifting, even without rotation (According to the way of mounting the slides, their should be no rotation of two scans.)
-So in current version, we don't take the rotation into account, because the rotation angle is so tiny and can be ignored. 
+In current version, we just consider the first scenario. This is a rigid image registration problem, just shifting, even without rotation. Because the scanners are designed to maximizing stability of slide loading and mounting, and only x and y directions have movements (z direction for focusing). 
+Piratically the rotation angle is small enough to be ignored. 
 
 To standardize the offset saving and loading, we introduced a [csv file](../../wsitools/file_management/example/wsi_pair_offset.csv) to maintain the WSI pairs and their offsets.
 
@@ -10,8 +12,8 @@ We provide two ways to get the shifting offset:
 ### 1. Automatic registration
 Here is the an example of how to automatically align two WSIs and save/load the offset to/from the csv file. It's a easy-to-use version of [our previous work](https://github.com/smujiang/Re-stained_WSIs_Registration). 
 
-* Note that rotation is not taken into account in this automatic registration. 
-* In most WSI scanner, the way of mounting slides determined that there should be minimum rotation, practically almost zero. 
+* Note that rotation is not taken into account in current version of this automatic registration. 
+* In most WSI scanner, the way of slides mounting determined that there should be minimum rotation, practically almost zero. 
 * So if the slide is scanned and re-scanned, the obtained two WSIs should be no rotation.
 * But if the WSIs are not obtained in scan and re-scan way, the rotation shouldn't be ignored, and you can not use this automatic registration.
 
@@ -25,7 +27,6 @@ from wsitools.wsi_registration.auto_wsi_matcher import MatcherParameters, WSI_Ma
 fixed_wsi = "/projects/MELF/7bb50b5d9dcf4e53ad311d66136ae00f.tiff"
 #float_wsi = "/projects/MELF-Clean/8a26a55a78b947059da4e8c36709a828.tiff"
 float_wsi_root_dir = "/projects/MELF-Clean/"
-
 
 case_mn = WSI_CaseManager()
 float_wsi = case_mn.get_counterpart_fn(fixed_wsi, float_wsi_root_dir)
