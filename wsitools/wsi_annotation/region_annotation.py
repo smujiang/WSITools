@@ -7,6 +7,7 @@ from shapely.geometry import Point
 import matplotlib.pyplot as plt
 from wsitools.file_management.class_label_csv_manager import ClassLabelCSVManager
 
+
 class Region:
     def __init__(self, points, shape, region_id, label_id, label_text):
         self.shape = shape

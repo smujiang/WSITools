@@ -73,7 +73,7 @@ if (project == null) {
 String root_dir = "H:\\temp"  # modify this root_dir to specify where you would like to save your export
 
 // loop through all the entries to get the annotation label map
-File fp = new File(root_dir, "label_id.csv")
+File fp = new File(root_dir, "class_label_id.csv")
 def Anno_labels = []
 for (entry in project.getImageList()) {
     def hierarchy = entry.readHierarchy()

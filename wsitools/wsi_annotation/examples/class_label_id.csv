@@ -1,0 +1,9 @@
+Label,ID,Priority
+null,0,0
+fat,1,1
+lymph,2,2
+Region,3,3
+malignant,4,4
+offset,5,5
+ink,6,6
+normal,7,7
