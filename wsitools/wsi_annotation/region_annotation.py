@@ -5,6 +5,7 @@ from shapely.geometry.polygon import Polygon
 from shapely.geometry import box
 from shapely.geometry import Point
 import matplotlib.pyplot as plt
+from wsitools.file_management.class_label_csv_manager import ClassLabelCSVManager
 
 class Region:
     def __init__(self, points, shape, region_id, label_id, label_text):
@@ -23,18 +24,19 @@ class Region:
         elif shape == "Ellipse":
             print("TODO: create ellipse region")
         elif shape == "Rectangle":
-            # self.geo_region = box(points)
-            self.geo_region = Polygon(points)
+            X = points[:, 0]
+            Y = points[:, 1]
+            self.geo_region = box(minx=min(X), miny=min(Y), maxx=max(X), maxy=max(Y))
         else:
             print("Not a region")
 
 
 class AnnotationRegions:
-    def __init__(self, xml_fn):
+    def __init__(self, xml_fn, class_label_id_csv):
         xml = minidom.parse(xml_fn)
+        self.class_label_id = ClassLabelCSVManager(class_label_id_csv)
         regions_dom = xml.getElementsByTagName("Region")
         self.Regions = []
-        points = np.empty([0, 2], dtype=np.float)
         for reg_dom in regions_dom:
             vertices = reg_dom.getElementsByTagName("Vertex")
             region_Id = reg_dom.getAttribute('Id')
@@ -45,29 +47,49 @@ class AnnotationRegions:
             for i, vertex in enumerate(vertices):
                 coords[i][0] = vertex.attributes['X'].value
                 coords[i][1] = vertex.attributes['Y'].value
-            points = np.vstack([points, coords])
-            self.Regions.append(Region(points, region_geo_shape, region_Id, class_label_Id, class_label_text))
+            self.Regions.append(Region(coords, region_geo_shape, region_Id, class_label_Id, class_label_text))
 
-    #TODO: deal with multiple labels
     def get_patch_label(self, patch_loc):  # patch location should be top left
         point = Point(patch_loc)
+        label_id = []
+        label_text = []
         for idx, region in enumerate(self.Regions):
-            if region.shape == "Polygon":
+            # TODO: Currently, we only support these three geometric types
+            if region.shape == "Rectangle" or region.shape == "Polygon" or region.shape == "Area":
                 if point.within(region.geo_region):
-                    print("Region ID: %s, Label ID: %s, Label text: %s, Shape: %s" % (region.region_id, region.label_id, region.label_text, region.shape))
-                    return region.label_id, region.label_text
+                    # print("Region ID: %s, Label ID: %s, Label text: %s, Shape: %s" % (region.region_id, region.label_id, region.label_text, region.shape))
+                    label_id.append(region.label_id)
+                    label_text.append(region.label_text)
+        if len(label_text) > 1:  # more than one label, choose the highest priority
+            label_pri = []
+            for lt in label_text:
+                label_pri.append(self.class_label_id.get_priority(lt))
+            label = label_id[label_pri.index(max(label_pri))]  # Be aware, there might be equal priority.
+            if len(label) > 1:
+                print("Pixel warning, Equal priority, return the first one")
+                return label[0]
+            else:
+                return label  # equal priority, choose the first one.
+        return label_id[0]
 
-    # TODO: deal with multiple labels
+    # For debugging
     def create_patch_annotation_mask(self, patch_loc, patch_size): # patch location should be top left
         mask_array = np.zeros([patch_size, patch_size], dtype=np.uint8)
         for w in range(patch_size):
             for h in range(patch_size):
-                point = Point([patch_loc[0]+w, patch_loc[1]+h])
+                mask_array[h, w] = self.get_patch_label([patch_loc[0]+w, patch_loc[1]+h])
+        return mask_array
+
+    # TODO: deal with multiple labels
+    def create_patch_annotation_mask_debug(self, patch_loc, patch_size):  # patch location should be top left
+        mask_array = np.zeros([patch_size, patch_size], dtype=np.uint8)
+        for w in range(patch_size):
+            for h in range(patch_size):
+                point = Point([patch_loc[0] + w, patch_loc[1] + h])
                 for idx, region in enumerate(self.Regions):
-                    if region.shape == "Polygon":
+                    if region.shape == "Rectangle" or region.shape == "Polygon" or region.shape == "Area":
                         if point.within(region.geo_region):
                             mask_array[h, w] += int(region.label_id)
-                            #print("Region ID: %s, Label ID: %s, Label text: %s, Shape: %s" % (region.region_id, region.label_id, region.label_text, region.shape))
         return mask_array
 
     def validate_annotation(self, wsi_fn, patch_loc, level=0, patch_size=256):
@@ -91,12 +113,15 @@ class AnnotationRegions:
 if __name__ == "__main__":
     wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a56844d695e9579bce8f0335.tiff"
     xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/e39a8d60a56844d695e9579bce8f0335.xml"
-    anno_regions = AnnotationRegions(xml_fn)
+    class_label_id_csv = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/label_id.csv"
+
+    anno_regions = AnnotationRegions(xml_fn, class_label_id_csv)
     # point = [105910.148438, 54728.425781]
     # anno_regions.get_patch_label(point)
     micron_loc = [8451.17, 6240.97]
     pix_loc = anno_regions.convert_micron_coord_2_pixel_coord(micron_loc)
-    anno_regions.validate_annotation(wsi_fn, pix_loc, patch_size=512)
+    anno_regions.get_patch_label(pix_loc)
+    anno_regions.validate_annotation(wsi_fn, pix_loc, patch_size=800)
 
 
 
