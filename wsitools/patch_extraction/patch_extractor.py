@@ -13,12 +13,12 @@ class ExtractorParameters:
     """
     Class for establishing & validating parameters for patch extraction
     """
-    def __init__(self,  save_dir=None, save_format=".tfrecords", sample_cnt=-1, patch_filter_by_area=None,\
+    def __init__(self,  save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None,\
                  with_anno=True, rescale_rate=128, patch_size=128, extract_layer=0):
         if save_dir is None:    # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
         self.save_dir = save_dir                # Output dir
-        self.save_format = save_format          # Save to tfrecords or jpg
+        self.save_format = save_format          # Save to .tfrecord or .jpg
         self.with_anno = with_anno              # If true, you need to supply an additional XML file
         self.rescale_rate = rescale_rate        # Fold size to scale the thumbnail to (for faster processing)
         self.patch_size = patch_size            # Size of patches to extract (Height & Width)
@@ -41,16 +41,16 @@ class PatchExtractor:
         self.rescale_rate = parameters.rescale_rate     # Fold size to scale the thumbnail to (for faster processing)
         self.patch_size = parameters.patch_size         # Size of patches to extract (Height & Width)
         self.extract_layer = parameters.extract_layer   # OpenSlide Level
-        self.save_format = parameters.save_format       # Save to tfrecords or jpg
+        self.save_format = parameters.save_format       # Save to .tfrecord or .jpg
         self.patch_filter_by_area = parameters.patch_filter_by_area # Amount of tissue that should be present in a patch
         self.sample_cnt = parameters.sample_cnt         # Limit the number of patches to extract (-1 == all patches)
-        self.feature_map = feature_map                  # Instructions for building tfrecords
+        self.feature_map = feature_map                  # Instructions for building tfRecords
         self.annotations = annotations                  # Annotation object
-        if self.save_format == ".tfrecords":
+        if self.save_format == ".tfrecord":
             if feature_map is not None:
                 self.with_feature_map = True
-            else:  # feature map for tfrecords, if save_format is ".tfrecords", it can't be None
-                raise Exception("A Feature map must be specified when you create tfrecords")
+            else:  # feature map for tfRecords, if save_format is ".tfrecord", it can't be None
+                raise Exception("A Feature map must be specified when you create tfRecords")
         else:
             if feature_map is not None:
                 logger.info("No need to specify feature_map ... ignoring.")
@@ -128,33 +128,35 @@ class PatchExtractor:
         else:
             return False
 
-    @staticmethod
-    def get_patch_label(patch_loc, annotations):
-        # get label txt and id for a patch from annotation
-        logger.warning('The get_patch_label function is not yet in operation!!')
-        logger.warning('Using default: ("label_txt", 0)')
-        label_info = ("label_txt", 0)  # TODO: get_patch_label not implemented
-        return label_info
-
-    def generate_patch_fn(self, case_info, patch_loc, label_info=None):
+    def get_patch_label(self, patch_loc, Center=True):
         """
-        Creates the filenames
+        :param patch_loc:  where the patch is extracted(top left)
+        :param Center:  use the top left (False) or the center of the patch (True) to get the annotation label
+        :return: label ID and label text
+        """
+        if Center:
+            pix_loc = (patch_loc[0] + self.patch_size, patch_loc[1] + self.patch_size)
+        else:
+            pix_loc = patch_loc
+        label_id, label_txt = self.annotations.get_pixel_label(pix_loc)
+        return label_id, label_txt
+
+    def generate_patch_fn(self, case_info, patch_loc, label_text=None):
+        """
+        Creates the filenames, if we save the patches as jpg/png files.
 
         :param case_info: likely a UUID or sample name
         :param patch_loc: tuple of (x, y) locations for where the patch came from
-        :param label_info: #TODO: Need to define this
+        :param label_text: #TODO: Need to define this
         :return: outputFileName
         """
-        if label_info is None:
-            tmp = (case_info["fn_str"] + "_%d_%d_" + self.save_format) % (int(patch_loc[0]), int(patch_loc[1]))
-            fn = os.path.join(self.save_dir, tmp)
+        if label_text is None:
+            tmp = (case_info["fn_str"] + "_%d_%d" + self.save_format) % (int(patch_loc[0]), int(patch_loc[1]))
         else:
-            fn = "temp"+self.save_format
-            logger.warning('The generate_patch_fn function is not yet in operation!!')
-            logger.warning('Using default: "temp"+self.save_format') # TODO: generate_patch_fn not implemented
-        return fn
+            tmp = (case_info["fn_str"] + "_%d_%d_%s" + self.save_format) % (int(patch_loc[0]), int(patch_loc[1]), label_text)
+        return os.path.join(self.save_dir, tmp)
 
-    def generate_tfrecords_fp(self, case_info):
+    def generate_tfRecords_fp(self, case_info):
         """
         Generates the TFRecord filename and writer object
         :param case_info: likely a UUID or sample name
@@ -177,7 +179,7 @@ class PatchExtractor:
         """
         patch_cnt = 0
         if self.with_feature_map:
-            tf_writer, tf_fn = self.generate_tfrecords_fp(case_info)
+            tf_writer, tf_fn = self.generate_tfRecords_fp(case_info)
         [loc_x, loc_y] = indices
         for idx, lx in enumerate(loc_x):
             patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
@@ -199,7 +201,7 @@ class PatchExtractor:
                     features = self.feature_map.update_feature_map_eval(values)
                     example = tf.train.Example(features=tf.train.Features(feature=features))  # Create an example protocol buffer
                     tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
-                    logger.info('\rWrote {} to tfrecords '.format(patch_cnt))
+                    logger.info('\rWrote {} to tfRecords '.format(patch_cnt))
                     sys.stdout.flush()
                 else:  # save patch to jpg, with label text and id in file name
                     # if logger.DEBUG == logger.root.level:
@@ -208,6 +210,67 @@ class PatchExtractor:
                     #     plt.imshow(patch)
                     #     plt.show()
                     fn = self.generate_patch_fn(case_info, (loc_x[idx], loc_y[idx]))
+                    if self.save_format == ".jpg":
+                        patch.save(fn)
+                    elif self.save_format == ".png":
+                        patch.convert("RGBA").save(fn)
+                    else:
+                        raise Exception("Can't recognize save format")
+                    logger.info('\rWrote {} to image files '.format(patch_cnt))
+                    sys.stdout.flush()
+            else:
+                logger.debug("No content found in image patch x: {} y: {}".format(loc_x[idx], loc_y[idx]))
+        tf_writer.close()
+        return patch_cnt
+
+    # get image patches and write to files
+    def save_patches(self, wsi_obj, case_info, indices):
+        """
+        Saves images (and their labels) in either JPEG, PNG, or TFRecord format and returns the number of patches it saved
+
+        :param wsi_obj: OpenSlideObject
+        :param case_info: likely a UUID or sample name
+        :param indices: tuple of (x, y) locations for where the patch will come from
+        :return: Number of patches written
+        """
+        patch_cnt = 0
+        if self.with_feature_map:
+            tf_writer, tf_fn = self.generate_tfRecords_fp(case_info)
+        [loc_x, loc_y] = indices
+        for idx, lx in enumerate(loc_x):
+            patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
+                                        self.extract_layer,
+                                        (self.patch_size, self.patch_size)
+                                        ).convert("RGB")
+            # Only print out the patches that contain tissue in them (e.g. Content Rich)
+            Content_rich = True
+            if self.patch_filter_by_area:  # if we need to filter the image patch
+                Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=self.patch_filter_by_area)
+            if Content_rich:
+                patch_cnt += 1
+                if self.with_anno:
+                    label_id, label_txt = self.get_patch_label([loc_x[idx], loc_y[idx]])
+                else:
+                    label_txt = ""
+                    label_id = -1  # can't delete this line, it will be used if save patch into tfRecords
+                if self.with_feature_map:  # Append data to tfRecord file
+                    # TODO: maybe need to find another way to do this
+                    values = []
+                    for eval_str in self.feature_map.eval_str:
+                        values.append(eval(eval_str))
+                    features = self.feature_map.update_feature_map_eval(values)
+                    example = tf.train.Example(
+                        features=tf.train.Features(feature=features))  # Create an example protocol buffer
+                    tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
+                    logger.info('\rWrote {} to tfRecords '.format(patch_cnt))
+                    sys.stdout.flush()
+                else:  # save patch to jpg, with label text and id in file name
+                    # if logger.DEBUG == logger.root.level:
+                    #     import matplotlib.pyplot as plt
+                    #     plt.figure(1)
+                    #     plt.imshow(patch)
+                    #     plt.show()
+                    fn = self.generate_patch_fn(case_info, (loc_x[idx], loc_y[idx]), label_text=label_txt)
                     if self.save_format == ".jpg":
                         patch.save(fn)
                     elif self.save_format == ".png":
@@ -231,15 +294,39 @@ class PatchExtractor:
         wsi_obj, case_info = self.get_case_info(wsi_fn)
         wsi_thumb = self.get_thumbnail(wsi_obj)    # get the thumbnail
         wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)   # get the foreground thumbnail mask
+        return self.save_patches(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
         # if logger.DEBUG == logger.root.level:
         #     import matplotlib.pyplot as plt
         #     fig, ax = plt.subplots(2, 1)
         #     ax[0].imshow(wsi_thumb)
         #     ax[1].imshow(wsi_thumb_mask, cmap='gray')
         #     plt.show()
-        if not self.with_anno:
-            return self.save_patch_without_annotation(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
-        else:
-            raise Exception("Saving patches with annotations is not supported yet.")
+        # if not self.with_anno:
+        #     return self.save_patch_without_annotation(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
+        # else:
+        #     raise Exception("Saving patches with annotations is not supported yet.")
             # TODO: extract patches with annotations
+
+
+if __name__ == "__main__":
+    from wsitools.tissue_detection.tissue_detector import TissueDetector  # import dependent packages
+    from wsitools.patch_extraction.feature_map_creator import FeatureMapCreator
+    from wsitools.wsi_annotation.region_annotation import AnnotationRegions
+
+    wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a56844d695e9579bce8f0335.tiff"  # WSI file name
+    output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
+
+    tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
+    fm = FeatureMapCreator("./feature_maps/basic_fm_PL_eval.csv")  # use this template to create feature map
+    xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/e39a8d60a56844d695e9579bce8f0335.xml"
+    class_label_id_csv = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/label_id.csv"
+    annotations = AnnotationRegions(xml_fn, class_label_id_csv)
+
+    parameters = ExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
+    patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=annotations)
+    patch_num = patch_extractor.extract(wsi_fn)
+    print("%d Patches have been save to %s" % (patch_num, output_dir))
+
+
+
 

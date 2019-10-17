@@ -12,7 +12,7 @@ class PairwiseExtractorParameters:
         if save_dir is None:    # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
         self.save_dir = save_dir
-        self.save_format = save_format  # Save to tfRecord or jpg
+        self.save_format = save_format  # Save to .tfrecord .png or .jpg
         self.with_anno = with_anno  # extract with annotation or not
         self.rescale_rate = rescale_rate  # rescale to get the thumbnail
         self.patch_size = patch_size  # patch numbers per image level
@@ -28,16 +28,16 @@ class PairwisePatchExtractor:
         self.rescale_rate = parameters.rescale_rate  # rescale to get the thumbnail
         self.patch_size = parameters.patch_size  # patch numbers per image level
         self.extract_layer = parameters.extract_layer  # maximum try at each image level
-        self.save_format = parameters.save_format  # Save to tfRecord or jpg
+        self.save_format = parameters.save_format  # Save to .tfrecord .png or .jpg
         self.patch_filter_by_area = parameters.patch_filter_by_area
         self.sample_cnt = parameters.sample_cnt
         self.feature_map = feature_map
         self.annotations = annotations
-        if self.save_format == ".tfRecord":   #tfRecord
+        if self.save_format == ".tfrecord":
             if feature_map is not None:
                 self.with_feature_map = True
-            else:  # feature map for tfRecords, if save_format is ".tfRecord", it can't be None
-                raise Exception("No feature map can refer to create tfRecord")
+            else:  # feature map for tfRecords, if save_format is ".tfrecord", it can't be None
+                raise Exception("No feature map can refer to create tfRecords")
         else:
             if feature_map is not None:
                 logging.debug("No need to specify feature mat")
@@ -349,7 +349,7 @@ if __name__ == "__main__":
         raise Exception("No corresponding offset can be found in the file")
 
     output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
-    parameters = PairwiseExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)
+    parameters = PairwiseExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
     patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=None)
     patch_cnt = patch_extractor.extract(fixed_wsi, float_wsi, offset)
     print("%d Patches have been save to %s" % (patch_cnt, output_dir))

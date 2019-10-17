@@ -58,7 +58,7 @@ def main():
 
     parser.add_argument("-f", "--patch-format",
                         dest='save_format',
-                        choices=['.png', '.jpg', '.tfrecords'],
+                        choices=['.png', '.jpg', '.tfrecord'],
                         default=".png",
                         help="Output format for patches")
 
@@ -108,7 +108,7 @@ def main():
     logger.setLevel(args.logLevel)
 
     # If TFRecords, must have a feature map
-    if args.save_format == '.tfrecords':
+    if args.save_format == '.tfrecord':
         assert args.feature_map is not None, "You must supply a feature map if you want TFRecords exported"
         assert os.path.exists(args.feature_map), "Your feature map file ({}) was not found".format(args.feature_map)
 
@@ -129,7 +129,7 @@ def main():
         fm = None
 
     parameters = ExtractorParameters(args.out_dir,               # Where the patches should be extracted to
-                                     save_format=args.save_format,  # Can be '.jpg', '.png', or '.tfrecords'
+                                     save_format=args.save_format,  # Can be '.jpg', '.png', or '.tfrecord'
                                      sample_cnt=args.sample_cnt,    # Limit the number of patches to extract
                                                                     # (-1 == all patches)
                                      patch_size=args.patch_size,    # Size of patches to extract (Height & Width)

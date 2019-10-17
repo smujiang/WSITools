@@ -33,7 +33,7 @@ output_dir = "/data/WSIs_extraction"    # Define an output directory
 # Define the parameters for Patch Extraction, including generating an thumbnail from which to traverse over to find 
 # tissue.
 parameters = ExtractorParameters(output_dir, # Where the patches should be extracted to
-    save_format = '.png',                      # Can be '.jpg', '.png', or '.tfrecords'              
+    save_format = '.png',                      # Can be '.jpg', '.png', or '.tfrecord'              
     sample_cnt = -1,                           # Limit the number of patches to extract (-1 == all patches)
     patch_size = 128,                          # Size of patches to extract (Height & Width)
     rescale_rate = 128,                        # Fold size to scale the thumbnail to (for faster processing)
@@ -92,5 +92,5 @@ Currently, it supports four patch extraction scenarios:
 [Annotate with QuPath and Export Annotations](docs/wsi_annotation/QuPath_scripts/readme.md)
 
 ## TODO list
-* Validate saved tfrecords.
+* Validate saved tfRecords.
 * Add annotation labels into patch extraction.

@@ -117,7 +117,7 @@ if state_indicator == 0:
     raise Exception("No corresponding offset can be found in the file")
 
 output_dir = "/projects/temp"
-parameters = PairwiseExtractorParameters(output_dir, save_format='.tfRecord', sample_cnt=-1)
+parameters = PairwiseExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
 patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=None)
 patch_cnt = patch_extractor.extract(fixed_wsi, float_wsi, offset)
 print("%d Patches have been save to %s" % (patch_cnt, output_dir))

@@ -71,7 +71,11 @@ class AnnotationRegions:
                 return label_id[l_idx[0]], label_text[l_idx[0]]  # equal priority, choose the first one.
             else:
                 return label_id[l_idx],  label_text[l_idx]
-        return label_id[0], label_text[1]
+        elif len(label_text) == 0:
+            return -1, "null"
+        else:
+            print("get a labeled patch %s" % label_text[0])
+            return label_id[0], label_text[0]
 
     # get a mask from annotation
     def create_patch_annotation_mask(self, patch_loc, patch_size):  # patch location should be top left
