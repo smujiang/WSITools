@@ -5,9 +5,14 @@ from skimage.color import rgb2lab
 import logging
 import tensorflow as tf
 import sys
+import concurrent
 
 logger = logging.getLogger(__name__)
-
+ch = logging.StreamHandler()
+formatter = logging.Formatter('\x1b[80D\x1b[1A\x1b[K%(message)s')
+ch.setFormatter(formatter)
+logger.addHandler(ch)
+patch_cnt = 0
 
 class ExtractorParameters:
     """
@@ -32,11 +37,12 @@ class PatchExtractor:
     Class that sets up the remaining info for patch extraction, and contains the function to extract them
     """
 
-    def __init__(self, detector, parameters,
+    def __init__(self, detector=None, threads=50, parameters=None,
                  feature_map=None,  # See note below
                  annotations=None   # Object of Annotation Class (see other note below)
                 ):
         self.tissue_detector = detector
+        self.threads = threads
         self.save_dir = parameters.save_dir
         self.rescale_rate = parameters.rescale_rate     # Fold size to scale the thumbnail to (for faster processing)
         self.patch_size = parameters.patch_size         # Size of patches to extract (Height & Width)
@@ -167,6 +173,45 @@ class PatchExtractor:
         writer = tf.python_io.TFRecordWriter(fn)  # generate tfRecord file handle
         return writer, fn
 
+    def img_patch_generator(self, x, y, wsi_obj, case_info):
+        """Return image patches if they have enough tissue"""
+        patch = wsi_obj.read_region((x, y),
+                                    self.extract_layer,
+                                    (self.patch_size, self.patch_size)
+                                    ).convert("RGB")
+
+        # Only print out the patches that contain tissue in them (e.g. Content Rich)
+        Content_rich = True
+        if self.patch_filter_by_area:  # if we need to filter the image patch
+            Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=self.patch_filter_by_area)
+        if Content_rich:
+            global patch_cnt
+            patch_cnt += 1
+            if self.with_feature_map:  # Append data to tfRecord file
+                # TODO: maybe need to find another way to do this
+                values = []
+                for eval_str in self.feature_map.eval_str:
+                    values.append(eval(eval_str))
+                features = self.feature_map.update_feature_map_eval(values)
+                example = tf.train.Example(
+                    features=tf.train.Features(feature=features))  # Create an example protocol buffer
+                tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
+                sys.stdout.flush()
+            else:  # save patch to jpg, with label text and id in file name
+                fn = self.generate_patch_fn(case_info, (x, y))
+                if os.path.exists(fn):
+                    logger.error('You already wrote this image file')
+                if self.save_format == ".jpg":
+                    patch.save(fn)
+                elif self.save_format == ".png":
+                    patch.convert("RGBA").save(fn)
+                else:
+                    raise Exception("Can't recognize save format")
+                sys.stdout.flush()
+        else:
+            logger.debug("No content found in image patch x: {} y: {}".format(loc_x[idx], loc_y[idx]))
+
+
     # get image patches and write to files
     def save_patch_without_annotation(self, wsi_obj, case_info, indices):
         """
@@ -175,9 +220,10 @@ class PatchExtractor:
         :param wsi_obj: OpenSlideObject
         :param case_info: likely a UUID or sample name
         :param indices: tuple of (x, y) locations for where the patch will come from
+        :param threads: how many threads to use
         :return: Number of patches written
         """
-        patch_cnt = 0
+
         if self.with_feature_map:
             tf_writer, tf_fn = self.generate_tfRecords_fp(case_info)
         [loc_x, loc_y] = indices
