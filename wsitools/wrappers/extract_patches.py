@@ -9,6 +9,12 @@ sys.path.insert(0, '..')
 from tissue_detection.tissue_detector import TissueDetector
 from patch_extraction.patch_extractor import ExtractorParameters, PatchExtractor
 from patch_extraction.feature_map_creator import FeatureMapCreator
+from wsitools.file_management.case_list_manager import CaseListManager
+import multiprocessing
+
+case_list_txt = "../file_management/example/case_list.txt"
+case_mn = CaseListManager(case_list_txt)
+all_wsi_fn = case_mn.case_list
 import multiprocessing
 
 
@@ -17,10 +23,11 @@ def main():
     parser = argparse.ArgumentParser()
 
     parser.add_argument("-w", "--wsi_fn",
-                        required=True,
                         dest='wsi_fn',
                         help="WSI file name")
-
+    parser.add_argument("-c", "--case-list",
+                        dest='case_list',
+                        help="File of paths for WSIs")
     parser.add_argument("-o", "--out-dir",
                         default=os.getcwd(),
                         dest='out_dir',
@@ -32,11 +39,17 @@ def main():
                         type=int,
                         help="H & W of patches")
 
-    parser.add_argument("-n", "--number-processors",
+    parser.add_argument("-p", "--number-processors",
                         default=8,
                         dest='num_processors',
                         type=int,
                         help="Number of processors to use during patch extraction")
+
+    parser.add_argument("-n", "--threads",
+                        default=50,
+                        dest='num_threads',
+                        type=int,
+                        help="Number of threads to use during patch extraction")
 
     parser.add_argument("-c", "--number-patches",
                         default=-1,
@@ -107,6 +120,14 @@ def main():
     logger = logging.getLogger(__name__)
     logger.setLevel(args.logLevel)
 
+    if not args.wsi_fn and not args.case_list:
+        raise Exception("You must specify either a WSI file (-w) or a case list (-c), but not both")
+    if args.wsi_fn and args.case_list:
+        raise Exception("You must specify either a WSI file (-w) or a case list (-c), but not both")
+    if args.wsi_fn:
+        sample_list = [args.wsi_fn]
+    else:
+        sample_list = open(args.case_list, "r").read()
     # If TFRecords, must have a feature map
     if args.save_format == '.tfrecords':
         assert args.feature_map is not None, "You must supply a feature map if you want TFRecords exported"
@@ -150,8 +171,9 @@ def main():
 
     # Will be another step for Annotations here
     # Create the extractor object
-    patch_extractor = PatchExtractor(tissue_detector,
-                                     parameters,
+    patch_extractor = PatchExtractor(detector=tissue_detector,
+                                     parameters=parameters,
+                                     threads=args.num_threads,
                                      feature_map=fm,  # Need to update this when available
                                      annotations=None   # Need to update this when available
                                      )
@@ -159,7 +181,7 @@ def main():
     # Run the extraction process
     multiprocessing.set_start_method('spawn')
     pool = multiprocessing.Pool(processes=args.num_processors)
-    pool.map(patch_extractor.extract, [args.wsi_fn])
+    pool.map(patch_extractor.extract, [s for s in sample_list])
     return 0
 
 

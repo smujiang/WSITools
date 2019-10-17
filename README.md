@@ -49,8 +49,9 @@ tissue_detector = TissueDetector("LAB_Threshold",   # Can be LAB_Threshold or GN
     )
 
 # Create the extractor object
-patch_extractor = PatchExtractor(tissue_detector, 
-    parameters, 
+patch_extractor = PatchExtractor(detector=tissue_detector, 
+    parameters=parameters,
+    threads=10,                              # Threads to use during extraction 
     feature_map = None,                       # See note below                     
     annotations = None                        # Object of Annotation Class (see other note below)
     )
