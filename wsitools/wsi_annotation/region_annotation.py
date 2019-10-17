@@ -49,12 +49,12 @@ class AnnotationRegions:
                 coords[i][1] = vertex.attributes['Y'].value
             self.Regions.append(Region(coords, region_geo_shape, region_Id, class_label_Id, class_label_text))
 
-    def get_patch_label(self, patch_loc):  # patch location should be top left
-        point = Point(patch_loc)
+    def get_pixel_label(self, pixel_loc):  # patch location should be top left
+        point = Point(pixel_loc)
         label_id = []
         label_text = []
         for idx, region in enumerate(self.Regions):
-            # TODO: Currently, we only support these three geometric types
+            # Currently, we only support these three geometric types
             if region.shape == "Rectangle" or region.shape == "Polygon" or region.shape == "Area":
                 if point.within(region.geo_region):
                     # print("Region ID: %s, Label ID: %s, Label text: %s, Shape: %s" % (region.region_id, region.label_id, region.label_text, region.shape))
@@ -64,23 +64,23 @@ class AnnotationRegions:
             label_pri = []
             for lt in label_text:
                 label_pri.append(self.class_label_id.get_priority(lt))
-            label = label_id[label_pri.index(max(label_pri))]  # Be aware, there might be equal priority.
-            if len(label) > 1:
+            l_idx = label_pri.index(max(label_pri))  # Be aware, there might be equal priority.
+            if type(l_idx) == list:
                 print("Pixel warning, Equal priority, return the first one")
-                return label[0]
+                return label_id[l_idx[0]], label_text[l_idx[0]]  # equal priority, choose the first one.
             else:
-                return label  # equal priority, choose the first one.
-        return label_id[0]
+                return label_id[l_idx],  label_text[l_idx]
+        return label_id[0], label_text[1]
 
-    # For debugging
-    def create_patch_annotation_mask(self, patch_loc, patch_size): # patch location should be top left
+    # get a mask from annotation
+    def create_patch_annotation_mask(self, patch_loc, patch_size):  # patch location should be top left
         mask_array = np.zeros([patch_size, patch_size], dtype=np.uint8)
         for w in range(patch_size):
             for h in range(patch_size):
-                mask_array[h, w] = self.get_patch_label([patch_loc[0]+w, patch_loc[1]+h])
+                mask_array[h, w] = self.get_pixel_label([patch_loc[0]+w, patch_loc[1]+h])
         return mask_array
 
-    # TODO: deal with multiple labels
+    #  get a mask from annotation for debugging
     def create_patch_annotation_mask_debug(self, patch_loc, patch_size):  # patch location should be top left
         mask_array = np.zeros([patch_size, patch_size], dtype=np.uint8)
         for w in range(patch_size):
@@ -120,7 +120,7 @@ if __name__ == "__main__":
     # anno_regions.get_patch_label(point)
     micron_loc = [8451.17, 6240.97]
     pix_loc = anno_regions.convert_micron_coord_2_pixel_coord(micron_loc)
-    anno_regions.get_patch_label(pix_loc)
+    anno_regions.get_pixel_label(pix_loc)   # pixel location is patch's top left
     anno_regions.validate_annotation(wsi_fn, pix_loc, patch_size=800)
 
 
