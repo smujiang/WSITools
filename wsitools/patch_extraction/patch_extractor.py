@@ -4,6 +4,10 @@ import os
 from skimage.color import rgb2lab
 import logging
 import tensorflow as tf
+import sys
+
+logger = logging.getLogger(__name__)
+
 
 class ExtractorParameters:
     """
@@ -49,7 +53,7 @@ class PatchExtractor:
                 raise Exception("A Feature map must be specified when you create tfrecords")
         else:
             if feature_map is not None:
-                logging.info("No need to specify feature_map ... ignoring.")
+                logger.info("No need to specify feature_map ... ignoring.")
             self.with_feature_map = False
         if annotations is None:
             self.with_anno = False
@@ -127,8 +131,8 @@ class PatchExtractor:
     @staticmethod
     def get_patch_label(patch_loc, annotations):
         # get label txt and id for a patch from annotation
-        logging.warning('The get_patch_label function is not yet in operation!!')
-        logging.warning('Using default: ("label_txt", 0)')
+        logger.warning('The get_patch_label function is not yet in operation!!')
+        logger.warning('Using default: ("label_txt", 0)')
         label_info = ("label_txt", 0)  # TODO: get_patch_label not implemented
         return label_info
 
@@ -146,8 +150,8 @@ class PatchExtractor:
             fn = os.path.join(self.save_dir, tmp)
         else:
             fn = "temp"+self.save_format
-            logging.warning('The generate_patch_fn function is not yet in operation!!')
-            logging.warning('Using default: "temp"+self.save_format') # TODO: generate_patch_fn not implemented
+            logger.warning('The generate_patch_fn function is not yet in operation!!')
+            logger.warning('Using default: "temp"+self.save_format') # TODO: generate_patch_fn not implemented
         return fn
 
     def generate_tfrecords_fp(self, case_info):
@@ -184,7 +188,7 @@ class PatchExtractor:
             # Only print out the patches that contain tissue in them (e.g. Content Rich)
             Content_rich = True
             if self.patch_filter_by_area:  # if we need to filter the image patch
-                Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=patch_filter_by_area)
+                Content_rich = self.filter_by_content_area(np.array(patch), area_threshold=self.patch_filter_by_area)
             if Content_rich:
                 patch_cnt += 1
                 if self.with_feature_map:  # Append data to tfRecord file
@@ -195,8 +199,10 @@ class PatchExtractor:
                     features = self.feature_map.update_feature_map_eval(values)
                     example = tf.train.Example(features=tf.train.Features(feature=features))  # Create an example protocol buffer
                     tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
+                    logger.info('\rWrote {} to tfrecords '.format(patch_cnt))
+                    sys.stdout.flush()
                 else:  # save patch to jpg, with label text and id in file name
-                    # if logging.DEBUG == logging.root.level:
+                    # if logger.DEBUG == logger.root.level:
                     #     import matplotlib.pyplot as plt
                     #     plt.figure(1)
                     #     plt.imshow(patch)
@@ -208,8 +214,10 @@ class PatchExtractor:
                         patch.convert("RGBA").save(fn)
                     else:
                         raise Exception("Can't recognize save format")
+                    logger.info('\rWrote {} to image files '.format(patch_cnt))
+                    sys.stdout.flush()
             else:
-                logging.debug("No content found in image patch x: {} y: {}".format(loc_x[idx], loc_y[idx]))
+                logger.debug("No content found in image patch x: {} y: {}".format(loc_x[idx], loc_y[idx]))
         tf_writer.close()
         return patch_cnt
 
@@ -223,7 +231,7 @@ class PatchExtractor:
         wsi_obj, case_info = self.get_case_info(wsi_fn)
         wsi_thumb = self.get_thumbnail(wsi_obj)    # get the thumbnail
         wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)   # get the foreground thumbnail mask
-        # if logging.DEBUG == logging.root.level:
+        # if logger.DEBUG == logger.root.level:
         #     import matplotlib.pyplot as plt
         #     fig, ax = plt.subplots(2, 1)
         #     ax[0].imshow(wsi_thumb)
