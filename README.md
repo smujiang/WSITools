@@ -89,8 +89,8 @@ Currently, it supports four patch extraction scenarios:
 [Patch Extraction](docs/patch_extraction/patch_extraction.md)   
 [WSI Alignment](docs/wsi_registration/wsi_registration.md)          
 [Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md)   
-[Annotate with QuPath and Export Annotations](docs/wsi_annotation/QuPath_scripts/readme.md)
-
+[Annotate with QuPath and Export Annotations](docs/wsi_annotation/QuPath_scripts/readme.md)  
+[Annotation Parsing](docs/wsi_annotation/annotation_parsing.md)
 ## TODO list
 * Validate saved tfRecords.
 * Add annotation labels into patch extraction.
