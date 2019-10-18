@@ -94,12 +94,18 @@ class PairwisePatchExtractor:
         else:
             return False
 
-    @staticmethod
-    def get_patch_label(patch_loc, annotations):
-        # get label txt and id for a patch from annotation
-        label_info = ("label_txt", 0)
-        # TODO:
-        return label_info
+    def get_patch_label(self, patch_loc, Center=True):
+        """
+        :param patch_loc:  where the patch is extracted(top left)
+        :param Center:  use the top left (False) or the center of the patch (True) to get the annotation label
+        :return: label ID and label text
+        """
+        if Center:
+            pix_loc = (patch_loc[0] + self.patch_size, patch_loc[1] + self.patch_size)
+        else:
+            pix_loc = patch_loc
+        label_id, label_txt = self.annotations.get_pixel_label(pix_loc)
+        return label_id, label_txt
 
     def generate_patch_fn(self, case_info, patch_loc, label_info=None):
         if label_info is None:
@@ -175,6 +181,55 @@ class PairwisePatchExtractor:
             if Content_rich:
                 patch_cnt += 1
                 logging.debug("extract from fixe image: %d %d and float image: %d %d" % (loc_x[idx], ly, int(loc_x[idx] + offset[0]), int(ly + offset[1])))
+                if self.with_feature_map:  # Append patch to tfRecord file
+                    # TODO:
+                    # print("Append patch to tfRecord file %s" % tf_fn)
+                    values = []
+                    for eval_str in self.feature_map.eval_str:
+                        values.append(eval(eval_str))
+                    features = self.feature_map.update_feature_map_eval(values)
+                    example = tf.train.Example(
+                        features=tf.train.Features(feature=features))  # Create an example protocol buffer
+                    tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
+                else:  # save patch to jpg, with label text and id in file name
+                    fn = self.generate_patch_fn(fixed_case_info, (loc_x[idx], ly))
+                    fixed_patch_arr = np.array(fixed_patch)
+                    # fixed_patch_arr[np.any(fixed_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
+                    float_patch_arr = np.array(float_patch)
+                    # float_patch_arr[np.any(float_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
+                    comb_arr = np.concatenate([fixed_patch_arr[:, :, :3], float_patch_arr[:, :, :3]], axis=1)
+                    if self.save_format == ".jpg":
+                        Image.fromarray(comb_arr, 'RGB').save(fn)
+                    elif self.save_format == ".png":
+                        Image.fromarray(comb_arr, 'RGB').convert("RGBA").save(fn)
+                    else:
+                        raise Exception("Can't recognize save format")
+            else:
+                logging.debug("Ignore the patch")
+        return patch_cnt
+
+    # get image patches and write to files
+    def save_patch_pairs(self, fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, indices):
+        patch_cnt = 0
+        if self.with_feature_map:
+            tf_writer, tf_fn = self.generate_tfRecord_fp(fixed_case_info)
+        [loc_x, loc_y] = indices
+        for idx, ly in enumerate(loc_y):
+            fixed_patch = fixed_wsi_obj.read_region((loc_x[idx], ly), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
+            float_patch = float_wsi_obj.read_region((int(loc_x[idx] + offset[0]), int(ly + offset[1])), self.extract_layer, (self.patch_size, self.patch_size)).convert("RGB")
+            Content_rich = True
+            if self.patch_filter_by_area:  # if we need to filter the image patch
+                Content_rich = self.filter_by_content_area(np.array(fixed_patch), area_threshold=0.5) and \
+                               self.filter_by_content_area(np.array(float_patch), area_threshold=0.5)
+            if Content_rich:
+                patch_cnt += 1
+                if self.with_anno:
+                    label_id, label_txt = self.get_patch_label([loc_x[idx], loc_y[idx]])
+                else:
+                    label_txt = ""
+                    label_id = -1  # can't delete this line, it will be used if save patch into tfRecords
+                logging.debug("extract from fixe image: %d %d and float image: %d %d" % (
+                loc_x[idx], ly, int(loc_x[idx] + offset[0]), int(ly + offset[1])))
                 if self.with_feature_map:  # Append patch to tfRecord file
                     # TODO:
                     # print("Append patch to tfRecord file %s" % tf_fn)
