@@ -13,8 +13,9 @@ A figure like the right two subplot of the figure below will be created.
 ![validate annotations](../imgs/anno_validation.png)
 The left subfigure is the screen cut from QuPath, it shows the parsed annotation is the same as in QuPath.
 Because we defined the priority of different regions, so some overlay area just show one annotation.
-The priority of the annotated regions is defined in the case_uuid.xml and class_label_id.csv 
 
+The priority of the annotated regions is defined in the case_uuid.xml and class_label_id.csv 
+We also provide ```update_priority``` method in [ClassLabelCSVManager](../../wsitools/file_management/class_label_csv_manager.py), type help(update_priority) in python console to get more details.
  
 
 
