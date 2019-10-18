@@ -8,26 +8,6 @@ from xml.dom import minidom
 
 class OffsetAnnotation:
     @staticmethod
-    def load_QuPath_points_from_QuPath_zip(anno_dir, case_uuid, ext='.tiff'):
-        txt_file = os.path.join(anno_dir, case_uuid + ext + "-points", "Points 1.txt")
-        fp = open(txt_file, 'r')
-        lines = fp.readlines()
-        coords_str_list = lines[3:]
-        coords = []
-        for coord_str in coords_str_list:
-            ele = coord_str.strip().split("\t")
-            coords.append([ele[0], ele[1]])
-        fp.close()
-        return np.array(coords).astype(float)
-
-    def get_QuPath_offset_barycentric(self, anno_dir, fixed_case_uuid, float_case_uuid):
-        template_anno_points = self.load_QuPath_points_from_QuPath_zip(anno_dir, fixed_case_uuid)
-        test_anno_points = self.load_QuPath_points_from_QuPath_zip(anno_dir, float_case_uuid)
-        offsets = np.mean(template_anno_points, axis=0) - np.mean(test_anno_points, axis=0)
-        return offsets
-
-    # ---------------------------------------------- #
-    @staticmethod
     # attr_filter, please refer to: https://docs.python.org/2/library/xml.etree.elementtree.html
     def load_QuPath_points_from_xml(xml_fn, geo_shape='Points', label_text='offset'):
         xml = minidom.parse(xml_fn)
@@ -46,13 +26,13 @@ class OffsetAnnotation:
                 points = np.vstack([points, coords])
         return points
 
+    # ------------------Way to get offset or affine matrix--------------------------- #
     def get_xml_offset_barycentric(self, fixed_xml, float_xml):
-        template_anno_points = self.load_QuPath_points_from_xml(fixed_xml)
-        test_anno_points = self.load_QuPath_points_from_xml(float_xml)
+        template_anno_points = self.load_QuPath_points_from_xml(fixed_xml, geo_shape='Points', label_text='offset')
+        test_anno_points = self.load_QuPath_points_from_xml(float_xml, geo_shape='Points', label_text='offset')
         offsets = np.mean(template_anno_points, axis=1) - np.mean(test_anno_points, axis=1)
         return offsets
 
-    # ---------------------------------------------- #
     @staticmethod
     def get_affine_matrix(fixed_points, float_points):
         l = len(fixed_points)
@@ -95,6 +75,46 @@ class OffsetAnnotation:
         ax4 = fig.add_subplot(224)
         ax4.imshow(error_img, cmap="gray")
         plt.show()
+
+    # -----------------------Another way to get offset----------------------- #
+    @staticmethod
+    def load_QuPath_points_from_QuPath_zip(anno_dir, case_uuid, ext='.tiff'):
+        txt_file = os.path.join(anno_dir, case_uuid + ext + "-points", "Points 1.txt")
+        fp = open(txt_file, 'r')
+        lines = fp.readlines()
+        coords_str_list = lines[3:]
+        coords = []
+        for coord_str in coords_str_list:
+            ele = coord_str.strip().split("\t")
+            coords.append([ele[0], ele[1]])
+        fp.close()
+        return np.array(coords).astype(float)
+
+    def get_QuPath_offset_barycentric(self, anno_dir, fixed_case_uuid, float_case_uuid):
+        template_anno_points = self.load_QuPath_points_from_QuPath_zip(anno_dir, fixed_case_uuid)
+        test_anno_points = self.load_QuPath_points_from_QuPath_zip(anno_dir, float_case_uuid)
+        offsets = np.mean(template_anno_points, axis=0) - np.mean(test_anno_points, axis=0)
+        return offsets
+
+    # ----------------------- Way to get cell locations----------------------- #
+    # attr_filter, please refer to: https://docs.python.org/2/library/xml.etree.elementtree.html
+    @staticmethod
+    def get_cell_points_from_xml(xml_fn, geo_shape='Points', cell_label_text='mitosis'):
+        xml = minidom.parse(xml_fn)
+        regions = xml.getElementsByTagName("Region")
+        points = np.empty([0, 2], dtype=np.float)
+        for region in regions:
+            vertices = region.getElementsByTagName("Vertex")
+            label_text = region.getAttribute('Text')
+            region_geo_shape = region.getAttribute('GeoShape')
+            if region_geo_shape == geo_shape and label_text == label_text:
+                # Store x, y coordinates into a 2D array in format [x1, y1], [x2, y2], ...
+                coords = np.zeros((len(vertices), 2))
+                for i, vertex in enumerate(vertices):
+                    coords[i][0] = vertex.attributes['X'].value
+                    coords[i][1] = vertex.attributes['Y'].value
+                points = np.vstack([points, coords])
+        return points
 
 
 # example
