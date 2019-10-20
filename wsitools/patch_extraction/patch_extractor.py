@@ -351,7 +351,6 @@ class PatchExtractor:
         #     return self.save_patch_without_annotation(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
         # else:
         #     raise Exception("Saving patches with annotations is not supported yet.")
-            # TODO: extract patches with annotations
 
 
 if __name__ == "__main__":
