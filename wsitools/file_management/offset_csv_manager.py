@@ -97,4 +97,4 @@ class OffsetCSVManager:
 
 # example
 if __name__ == '__main__':
-    print("see auto_wsi_matcher.py for examples")
+    print("see wsitools/examples/wsi_aligment.py to take examples")

@@ -1,4 +1,7 @@
 from setuptools import setup, find_packages
+import sys
+if sys.version_info < (2,7):
+    sys.exit('Sorry, Python < 2.7 is not supported')
 
 setup(
     name='wsitools',
@@ -20,6 +23,8 @@ setup(
         'openslide-python',
         'shapely',
         'pillow',
-        'joblib'
+        'joblib',
+        'tensorflow',
+        'concurrent'
     ]
 )
