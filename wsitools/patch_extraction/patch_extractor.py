@@ -5,14 +5,15 @@ from skimage.color import rgb2lab
 import logging
 import tensorflow as tf
 import sys
-import concurrent
+import concurrent  # python 2.7 don't support this module
 
 logger = logging.getLogger(__name__)
 ch = logging.StreamHandler()
 formatter = logging.Formatter('\x1b[80D\x1b[1A\x1b[K%(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
-patch_cnt = 0
+patch_cnt = 0  # count how many patches extracted
+
 
 class ExtractorParameters:
     """
@@ -173,7 +174,7 @@ class PatchExtractor:
         writer = tf.python_io.TFRecordWriter(fn)  # generate tfRecord file handle
         return writer, fn
 
-    def img_patch_generator(self, x, y, wsi_obj, case_info):
+    def img_patch_generator(self, x, y, wsi_obj, case_info, tf_writer=None):
         """Return image patches if they have enough tissue"""
         patch = wsi_obj.read_region((x, y),
                                     self.extract_layer,
@@ -187,6 +188,12 @@ class PatchExtractor:
         if Content_rich:
             global patch_cnt
             patch_cnt += 1
+            if self.with_anno:
+                label_id, label_txt = self.get_patch_label([x, y])
+            else:
+                label_txt = ""
+                label_id = -1  # can't delete this line, it will be used if save patch into tfRecords
+
             if self.with_feature_map:  # Append data to tfRecord file
                 # TODO: maybe need to find another way to do this
                 values = []
@@ -198,7 +205,7 @@ class PatchExtractor:
                 tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
                 sys.stdout.flush()
             else:  # save patch to jpg, with label text and id in file name
-                fn = self.generate_patch_fn(case_info, (x, y))
+                fn = self.generate_patch_fn(case_info, (x, y), label_text=label_txt)
                 if os.path.exists(fn):
                     logger.error('You already wrote this image file')
                 if self.save_format == ".jpg":
@@ -209,7 +216,27 @@ class PatchExtractor:
                     raise Exception("Can't recognize save format")
                 sys.stdout.flush()
         else:
-            logger.debug("No content found in image patch x: {} y: {}".format(loc_x[idx], loc_y[idx]))
+            logger.debug("No content found in image patch x: {} y: {}".format(x, y))
+
+    def parallel_save_patches(self, wsi_obj, case_info, indices):
+        if self.with_feature_map:
+            tf_writer, tf_fn = self.generate_tfRecords_fp(case_info)
+        else:
+            tf_writer = None
+        [loc_x, loc_y] = indices
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.threads) as executor:
+            futures = [executor.submit(self.img_patch_generator, loc_x[idx], loc_y[idx], wsi_obj, case_info, tf_writer) for idx, lx
+                       in enumerate(loc_x)]
+            for f in concurrent.futures.as_completed(futures):
+                try:
+                    f.result()
+                except NameError:
+                    # logger.warning('Unable to find x_loc: {}'.format(loc_x))
+                    pass
+        if self.with_feature_map:
+            tf_writer.close()
+        global patch_cnt
+        logger.info('Found {} image patches'.format(patch_cnt))
 
 
     # get image patches and write to files
