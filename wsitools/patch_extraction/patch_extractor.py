@@ -395,7 +395,7 @@ if __name__ == "__main__":
     annotations = AnnotationRegions(xml_fn, class_label_id_csv)
 
     parameters = ExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
-    patch_extractor = PatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=annotations)
+    patch_extractor = PatchExtractor(tissue_detector, threads=5, parameters=parameters, feature_map=fm, annotations=annotations)
     patch_num = patch_extractor.extract(wsi_fn)
     print("%d Patches have been save to %s" % (patch_num, output_dir))
 
