@@ -13,14 +13,6 @@ the dependent [OpenSlide](https://openslide.org/) library.
     1. Download the correct [binary](https://openslide.org/download/#windows-binaries) file for your system
     2. Copy all files from `/bin` into your `venv/Scripts/` directory
 
-<style> .borderexample { border-style:solid; border-color:#287EC7; border-radius: 6px; } </style>
-<div class="borderexample" markdown="1">
-    <p> da </p>
-
-</div>    
-
-
-
 ### Testing
 We provide examples for [Patch Extraction](docs/patch_extraction/patch_extraction.md) and 
 [Pairwise Patch Extraction](docs/patch_extraction/pairwise_patch_extraction.md). You can choose to save the extracted 
