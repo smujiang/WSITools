@@ -24,7 +24,6 @@ setup(
         'shapely',
         'pillow',
         'joblib',
-        'tensorflow',
-        'concurrent'
+        'tensorflow'
     ]
 )
