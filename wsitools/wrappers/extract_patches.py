@@ -4,13 +4,11 @@ import argparse
 import logging
 import os
 import sys
-sys.path.insert(0, '..')
 
-from tissue_detection.tissue_detector import TissueDetector
-from patch_extraction.patch_extractor import ExtractorParameters, PatchExtractor
-from patch_extraction.feature_map_creator import FeatureMapCreator
+from wsitools.tissue_detection.tissue_detector import TissueDetector
+from wsitools.patch_extraction.patch_extractor import ExtractorParameters, PatchExtractor
+from wsitools.patch_extraction.feature_map_creator import FeatureMapCreator
 import multiprocessing
-
 
 def main():
     """Console script for extracting patches from WSI files."""
