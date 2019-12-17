@@ -67,14 +67,14 @@ class AnnotationRegions:
                 label_pri.append(self.class_label_id.get_priority(lt))
             l_idx = label_pri.index(max(label_pri))  # Be aware, there might be equal priority.
             if type(l_idx) == list:
-                print("Pixel warning, Equal priority, return the first one")
+                # print("Pixel warning, Equal priority, return the first one")
                 return label_id[l_idx[0]], label_text[l_idx[0]]  # equal priority, choose the first one.
             else:
                 return label_id[l_idx],  label_text[l_idx]
         elif len(label_text) == 0:
             return -1, "null"
         else:
-            print("get a labeled patch %s" % label_text[0])
+            # print("get a labeled patch %s" % label_text[0])
             return label_id[0], label_text[0]
 
     # get a mask from annotation
