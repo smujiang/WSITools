@@ -15,8 +15,7 @@ the dependent [OpenSlide](https://openslide.org/) library.
 
 <style> .borderexample { border-style:solid; border-color:#287EC7; border-radius: 6px; } </style>
 <div class="borderexample" markdown="1">
-
-    da
+    <p> da </p>
 
 </div>    
 
