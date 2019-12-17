@@ -1,30 +1,32 @@
-from xlrd import open_workbook
+import logging
 import os
 
 
 class WSI_CaseManager:
-    def __init__(self, case_inventory_xls=None, sheet=6, cols=(6, 9), rows=(8, -1)):
-        if not bool(case_inventory_xls):    # if it's empty, load the default one
-            case_inventory_xls = "../file_management/example/wsi_cases_FlotteSlideMasterInventory-TF.xlsx"
-        MELF_Sheet_idx = sheet  # index of the sheet
-        Marked_UUID_idx = cols[0]  # index of column save marked WSI
-        Clean_UUID_idx = cols[1]  # index of column save clean WSI
-        Start_row_idx = rows[0]  # index of start row which contains uuid
-        matched_pairs = []
-        try:
-            wb = open_workbook(case_inventory_xls, 'r')
-            wb_sheet = wb.sheet_by_index(MELF_Sheet_idx)
-            if rows[1] == -1:   # load all the cases in the table
-                cases_n = wb_sheet.nrows
-            else:
-                cases_n = rows[1]
-            for row_idx in range(Start_row_idx, cases_n):
-                marked_uuid = wb_sheet.cell(row_idx, Marked_UUID_idx).value
-                clean_uuid = wb_sheet.cell(row_idx, Clean_UUID_idx).value
-                matched_pairs.append([marked_uuid, clean_uuid])
-            self.counterpart_uuid_table = matched_pairs
-        except FileNotFoundError:
-            print("Something went wrong when open the file")
+    """
+    This code manages a csv file or a list, in which image pairs are defined.
+    Example file of the csv file can be found at: ../file_management/example/case_pairs.csv
+    See wsitools/examples/wsi_aligment.py to have more clues
+    """
+
+    def __init__(self, case_inventory_file=None):
+        if not bool(case_inventory_file):  # if it's empty, load the default one
+            logging.debug("loading the default image pair table")
+            case_inventory_file = "../file_management/example/case_pairs.csv"
+        if type(case_inventory_file) is list:  # if it's already the matched pairs
+            self.counterpart_uuid_table = case_inventory_file  # list ([fixed_fn, float_fn])
+        else:
+            matched_pairs = []
+            try:
+                lines = open(case_inventory_file).readlines()
+                for l in lines:
+                    if l.strip():
+                        fixed_fn = l.strip(",")[0]
+                        float_fn = l.strip(",")[1]
+                        matched_pairs.append([fixed_fn, float_fn])
+                self.counterpart_uuid_table = matched_pairs
+            except FileNotFoundError:
+                raise Exception("Something went wrong when open the file")
 
     @staticmethod
     def get_wsi_fn_info(wsi_fn):
@@ -45,12 +47,10 @@ class WSI_CaseManager:
     def get_counterpart_fn(self, wsi_name, counterpart_root_dir, ext=".tiff"):
         counterpart_case_uuid = self.get_wsi_counterpart_uuid(wsi_name)
         if counterpart_case_uuid:
-            return os.path.join(counterpart_root_dir, counterpart_case_uuid+ext)
+            return os.path.join(counterpart_root_dir, counterpart_case_uuid + ext)
         else:
             raise Exception("Can't find counterpart")
 
 
-# example
 if __name__ == '__main__':
-    print("see wsitools/examples/wsi_aligment.py to take examples")
-
+    print("Type help(WSI_CaseManager) to get more information")
