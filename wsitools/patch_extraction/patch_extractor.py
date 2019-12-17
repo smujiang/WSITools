@@ -19,8 +19,8 @@ class ExtractorParameters:
     """
     Class for establishing & validating parameters for patch extraction
     """
-    def __init__(self,  save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None,\
-                 with_anno=True, rescale_rate=128, patch_size=128, extract_layer=0):
+    def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None,\
+                 with_anno=True, threads=20, rescale_rate=128, patch_size=128, extract_layer=0):
         if save_dir is None:    # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
         self.save_dir = save_dir                # Output dir
@@ -31,19 +31,19 @@ class ExtractorParameters:
         self.extract_layer = extract_layer      # OpenSlide Level
         self.patch_filter_by_area = patch_filter_by_area # Amount of tissue that should be present in a patch
         self.sample_cnt = sample_cnt            # Limit the number of patches to extract (-1 == all patches)
-
+        self.threads = threads
 
 class PatchExtractor:
     """
     Class that sets up the remaining info for patch extraction, and contains the function to extract them
     """
 
-    def __init__(self, detector=None, threads=50, parameters=None,
+    def __init__(self, detector=None, parameters=None,
                  feature_map=None,  # See note below
                  annotations=None   # Object of Annotation Class (see other note below)
                 ):
         self.tissue_detector = detector
-        self.threads = threads
+        self.threads = parameters.threads
         self.save_dir = parameters.save_dir
         self.rescale_rate = parameters.rescale_rate     # Fold size to scale the thumbnail to (for faster processing)
         self.patch_size = parameters.patch_size         # Size of patches to extract (Height & Width)
