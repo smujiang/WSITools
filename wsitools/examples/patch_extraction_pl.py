@@ -7,9 +7,9 @@ wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a5
 output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
 
 tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
-fm = FeatureMapCreator("./feature_maps/basic_fm_PL_eval.csv")  # use this template to create feature map
-xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/e39a8d60a56844d695e9579bce8f0335.xml"
-class_label_id_csv = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/label_id.csv"
+fm = FeatureMapCreator("../patch_extraction/feature_maps/basic_fm_PL_eval.csv")  # use this template to create feature map
+xml_fn = "../wsi_annotation/examples/e39a8d60a56844d695e9579bce8f0335.xml"
+class_label_id_csv = "../wsi_annotation/examples/class_label_id.csv"
 annotations = AnnotationRegions(xml_fn, class_label_id_csv)
 
 parameters = ExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
