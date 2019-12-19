@@ -5,6 +5,7 @@ from skimage.color import rgb2lab
 from sklearn.naive_bayes import GaussianNB
 import joblib
 
+
 class TissueDetector:
     def __init__(self, name, threshold=0.5, training_files=""):
         self.name = name
@@ -46,7 +47,9 @@ class TissueDetector:
             lab_img = rgb2lab(wsi_thumb_img)
             l_img = lab_img[:, :, 0]
             # tissue is darker than background, recommend threshold value: 85
-            binary_img_array = np.array(l_img < self.threshold) * 255
+            binary_img_array_1 = np.array(0 < l_img)
+            binary_img_array_2 = np.array(l_img < self.threshold)
+            binary_img_array = np.logical_and(binary_img_array_1, binary_img_array_2) * 255
         elif self.name == "GNB":  # Gaussian Naive Bayes
             marked_thumbnail = np.array(wsi_thumb_img)
             gnb_model = self.get_gnb_model()
