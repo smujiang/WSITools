@@ -5,6 +5,7 @@ from shapely.geometry.polygon import Polygon
 from shapely.geometry import box
 from shapely.geometry import Point
 import matplotlib.pyplot as plt
+import logging
 from wsitools.file_management.class_label_csv_manager import ClassLabelCSVManager
 
 
@@ -21,15 +22,15 @@ class Region:
         elif shape == "Area":
             self.geo_region = Polygon(points)
         elif shape == "Polyline":
-            print("TODO: create polyline region")
+            logging.info("TODO: create polyline region")
         elif shape == "Ellipse":
-            print("TODO: create ellipse region")
+            logging.info("TODO: create ellipse region")
         elif shape == "Rectangle":
             X = points[:, 0]
             Y = points[:, 1]
             self.geo_region = box(minx=min(X), miny=min(Y), maxx=max(X), maxy=max(Y))
         else:
-            print("Not a region")
+            logging.info("Not a region")
 
 
 class AnnotationRegions:
