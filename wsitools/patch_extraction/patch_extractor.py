@@ -176,7 +176,7 @@ class PatchExtractor:
         """
         tmp = case_info["fn_str"] + self.save_format
         fn = os.path.join(self.save_dir, tmp)
-        writer = tf.python_io.TFRecordWriter(fn)  # generate tfRecord file handle
+        writer = tf.io.TFRecordWriter(fn)  # generate tfRecord file handle
         return writer, fn
 
     def img_patch_generator(self, x, y, wsi_obj, case_info, tf_writer=None):
