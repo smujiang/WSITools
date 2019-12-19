@@ -1,5 +1,5 @@
-fixed_wsi = "/projects/WSIs/MELF/d83cc7d1c941438e93786fc381ab5bb5.tiff"
-float_wsi_root_dir = "/projects/WSIs/MELF-Clean"
+fixed_wsi = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a56844d695e9579bce8f0335.tiff"
+float_wsi_root_dir = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF-Clean/"
 
 from wsitools.file_management.wsi_case_manager import WSI_CaseManager  # import dependent packages
 from wsitools.file_management.offset_csv_manager import OffsetCSVManager
@@ -18,7 +18,7 @@ offset_csv_mn = OffsetCSVManager(offset_csv_fn)
 offset, state_indicator = offset_csv_mn.lookup_table(fixed_wsi_uuid, float_wsi_uuid)
 if state_indicator == 0:
     raise Exception("No corresponding offset can be found in the file")
-output_dir = "/projects/data/temp"
+output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
 parameters = PairwiseExtractorParameters(output_dir, save_format='.jpg', sample_cnt=-1)
 patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=None, annotations=None)
 patch_cnt = patch_extractor.extract(fixed_wsi, float_wsi, offset)
