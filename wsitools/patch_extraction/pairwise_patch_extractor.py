@@ -86,7 +86,9 @@ class PairwisePatchExtractor:
         rgb_image_array[np.any(rgb_image_array == [0, 0, 0], axis=-1)] = [255, 255, 255]
         lab_img = rgb2lab(rgb_image_array)
         l_img = lab_img[:, :, 0]
-        binary_img = l_img < brightness
+        binary_img_array_1 = np.array(0 < l_img)
+        binary_img_array_2 = np.array(l_img < brightness)
+        binary_img = np.logical_and(binary_img_array_1, binary_img_array_2) * 255
         tissue_size = np.where(binary_img > 0)[0].size
         tissue_ratio = tissue_size * 3 / rgb_image_array.size  # 3 channels
         if tissue_ratio > area_threshold:
@@ -271,11 +273,22 @@ class PairwisePatchExtractor:
             ax[1].imshow(thumbnail_float)
             ax[2].imshow(fixed_wsi_thumb_mask, cmap='gray')
             plt.show()
-        if not self.with_anno:
-            return self.save_patch_without_annotation(fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, intersection_indices)
-        else:
-            # TODO:
-            print("TODO: extract patches with annotations")
+        return self.save_patch_pairs(fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, intersection_indices)
+
+
+        # if logging.DEBUG == logging.root.level:
+        #     print("%d patches need to be extracted" % len(intersection_indices[0]))
+        #     import matplotlib.pyplot as plt
+        #     fig, ax = plt.subplots(3, 1)
+        #     ax[0].imshow(thumbnail_fixed)
+        #     ax[1].imshow(thumbnail_float)
+        #     ax[2].imshow(fixed_wsi_thumb_mask, cmap='gray')
+        #     plt.show()
+        # if not self.with_anno:
+        #     return self.save_patch_without_annotation(fixed_wsi_obj, float_wsi_obj, fixed_case_info, offset, intersection_indices)
+        # else:
+        #     # TODO:
+        #     print("TODO: extract patches with annotations")
 
     def extract_parallel(self, ffo_tuple):
         fixed_wsi_fn, float_wsi_fn, offset_x, offset_y = ffo_tuple
