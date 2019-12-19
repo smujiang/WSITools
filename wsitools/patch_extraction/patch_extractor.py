@@ -19,19 +19,21 @@ class ExtractorParameters:
     """
     Class for establishing & validating parameters for patch extraction
     """
-    def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None,\
+
+    def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None, \
                  with_anno=True, threads=20, rescale_rate=128, patch_size=128, extract_layer=0):
-        if save_dir is None:    # specify a directory to save the extracted patches
+        if save_dir is None:  # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
-        self.save_dir = save_dir                # Output dir
-        self.save_format = save_format          # Save to .tfrecord or .jpg
-        self.with_anno = with_anno              # If true, you need to supply an additional XML file
-        self.rescale_rate = rescale_rate        # Fold size to scale the thumbnail to (for faster processing)
-        self.patch_size = patch_size            # Size of patches to extract (Height & Width)
-        self.extract_layer = extract_layer      # OpenSlide Level
-        self.patch_filter_by_area = patch_filter_by_area # Amount of tissue that should be present in a patch
-        self.sample_cnt = sample_cnt            # Limit the number of patches to extract (-1 == all patches)
+        self.save_dir = save_dir  # Output dir
+        self.save_format = save_format  # Save to .tfrecord or .jpg
+        self.with_anno = with_anno  # If true, you need to supply an additional XML file
+        self.rescale_rate = rescale_rate  # Fold size to scale the thumbnail to (for faster processing)
+        self.patch_size = patch_size  # Size of patches to extract (Height & Width)
+        self.extract_layer = extract_layer  # OpenSlide Level
+        self.patch_filter_by_area = patch_filter_by_area  # Amount of tissue that should be present in a patch
+        self.sample_cnt = sample_cnt  # Limit the number of patches to extract (-1 == all patches)
         self.threads = threads
+
 
 class PatchExtractor:
     """
@@ -40,19 +42,19 @@ class PatchExtractor:
 
     def __init__(self, detector=None, parameters=None,
                  feature_map=None,  # See note below
-                 annotations=None   # Object of Annotation Class (see other note below)
-                ):
+                 annotations=None  # Object of Annotation Class (see other note below)
+                 ):
         self.tissue_detector = detector
         self.threads = parameters.threads
         self.save_dir = parameters.save_dir
-        self.rescale_rate = parameters.rescale_rate     # Fold size to scale the thumbnail to (for faster processing)
-        self.patch_size = parameters.patch_size         # Size of patches to extract (Height & Width)
-        self.extract_layer = parameters.extract_layer   # OpenSlide Level
-        self.save_format = parameters.save_format       # Save to .tfrecord or .jpg
-        self.patch_filter_by_area = parameters.patch_filter_by_area # Amount of tissue that should be present in a patch
-        self.sample_cnt = parameters.sample_cnt         # Limit the number of patches to extract (-1 == all patches)
-        self.feature_map = feature_map                  # Instructions for building tfRecords
-        self.annotations = annotations                  # Annotation object
+        self.rescale_rate = parameters.rescale_rate  # Fold size to scale the thumbnail to (for faster processing)
+        self.patch_size = parameters.patch_size  # Size of patches to extract (Height & Width)
+        self.extract_layer = parameters.extract_layer  # OpenSlide Level
+        self.save_format = parameters.save_format  # Save to .tfrecord or .jpg
+        self.patch_filter_by_area = parameters.patch_filter_by_area  # Amount of tissue that should be present in a patch
+        self.sample_cnt = parameters.sample_cnt  # Limit the number of patches to extract (-1 == all patches)
+        self.feature_map = feature_map  # Instructions for building tfRecords
+        self.annotations = annotations  # Annotation object
         if self.save_format == ".tfrecord":
             if feature_map is not None:
                 self.with_feature_map = True
@@ -124,10 +126,12 @@ class PatchExtractor:
         :return:
         """
         # TODO: Alternative tissue detectors, not just RGB->LAB->Thresh
-        rgb_image_array[np.any(rgb_image_array == [0, 0, 0], axis=-1)] = [255, 255, 255]
+        # rgb_image_array[np.any(rgb_image_array == [0, 0, 0], axis=-1)] = [255, 255, 255]
         lab_img = rgb2lab(rgb_image_array)
         l_img = lab_img[:, :, 0]
-        binary_img = l_img < brightness
+        binary_img_array_1 = np.array(0 < l_img)
+        binary_img_array_2 = np.array(l_img < brightness)
+        binary_img = np.logical_and(binary_img_array_1, binary_img_array_2) * 255
         tissue_size = np.where(binary_img > 0)[0].size
         tissue_ratio = tissue_size * 3 / rgb_image_array.size  # 3 channels
         if tissue_ratio > area_threshold:
@@ -160,7 +164,8 @@ class PatchExtractor:
         if label_text is None:
             tmp = (case_info["fn_str"] + "_%d_%d" + self.save_format) % (int(patch_loc[0]), int(patch_loc[1]))
         else:
-            tmp = (case_info["fn_str"] + "_%d_%d_%s" + self.save_format) % (int(patch_loc[0]), int(patch_loc[1]), label_text)
+            tmp = (case_info["fn_str"] + "_%d_%d_%s" + self.save_format) % (
+            int(patch_loc[0]), int(patch_loc[1]), label_text)
         return os.path.join(self.save_dir, tmp)
 
     def generate_tfRecords_fp(self, case_info):
@@ -225,7 +230,8 @@ class PatchExtractor:
             tf_writer = None
         [loc_x, loc_y] = indices
         with concurrent.futures.ThreadPoolExecutor(max_workers=self.threads) as executor:
-            futures = [executor.submit(self.img_patch_generator, loc_x[idx], loc_y[idx], wsi_obj, case_info, tf_writer) for idx, lx
+            futures = [executor.submit(self.img_patch_generator, loc_x[idx], loc_y[idx], wsi_obj, case_info, tf_writer)
+                       for idx, lx
                        in enumerate(loc_x)]
             for f in concurrent.futures.as_completed(futures):
                 try:
@@ -237,7 +243,6 @@ class PatchExtractor:
             tf_writer.close()
         global patch_cnt
         logger.info('Found {} image patches'.format(patch_cnt))
-
 
     # get image patches and write to files
     def save_patch_without_annotation(self, wsi_obj, case_info, indices):
@@ -272,7 +277,8 @@ class PatchExtractor:
                     for eval_str in self.feature_map.eval_str:
                         values.append(eval(eval_str))
                     features = self.feature_map.update_feature_map_eval(values)
-                    example = tf.train.Example(features=tf.train.Features(feature=features))  # Create an example protocol buffer
+                    example = tf.train.Example(
+                        features=tf.train.Features(feature=features))  # Create an example protocol buffer
                     tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
                     logger.info('\rWrote {} to tfRecords '.format(patch_cnt))
                     sys.stdout.flush()
@@ -365,8 +371,8 @@ class PatchExtractor:
         :return: Number of patches written
         """
         wsi_obj, case_info = self.get_case_info(wsi_fn)
-        wsi_thumb = self.get_thumbnail(wsi_obj)    # get the thumbnail
-        wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)   # get the foreground thumbnail mask
+        wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
+        wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
         return self.save_patches(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
         # if logger.DEBUG == logger.root.level:
         #     import matplotlib.pyplot as plt
@@ -395,10 +401,7 @@ if __name__ == "__main__":
     annotations = AnnotationRegions(xml_fn, class_label_id_csv)
 
     parameters = ExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
-    patch_extractor = PatchExtractor(tissue_detector, threads=5, parameters=parameters, feature_map=fm, annotations=annotations)
+    patch_extractor = PatchExtractor(tissue_detector, parameters=parameters, feature_map=fm,
+                                     annotations=annotations)
     patch_num = patch_extractor.extract(wsi_fn)
     print("%d Patches have been save to %s" % (patch_num, output_dir))
-
-
-
-
