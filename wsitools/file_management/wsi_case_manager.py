@@ -19,10 +19,11 @@ class WSI_CaseManager:
             matched_pairs = []
             try:
                 lines = open(case_inventory_file).readlines()
-                for l in lines:
+                for l in lines[1:]:  # skip the first line
                     if l.strip():
-                        fixed_fn = l.strip(",")[0]
-                        float_fn = l.strip(",")[1]
+                        ele = l.strip().split(",")
+                        fixed_fn = ele[0]
+                        float_fn = ele[1]
                         matched_pairs.append([fixed_fn, float_fn])
                 self.counterpart_uuid_table = matched_pairs
             except FileNotFoundError:
