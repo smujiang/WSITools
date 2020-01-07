@@ -109,15 +109,16 @@ class PairwisePatchExtractor:
         label_id, label_txt = self.annotations.get_pixel_label(pix_loc)
         return label_id, label_txt
 
-    def generate_patch_fn(self, case_info, patch_loc, label_info=None):
-        if label_info is None:
-            tmp = (case_info["fn_str"] + "_%d_%d_" + self.save_format) % (int(patch_loc[0]), int(patch_loc[1]))
-            fn = os.path.join(self.save_dir, tmp)
+    def generate_patch_fn(self, case_info, patch_loc, label_text=None):
+        if label_text is None or (not label_text.strip()):
+            tmp = (case_info["fn_str"] + "_%d_%d" + self.save_format) % (int(patch_loc[0]), int(patch_loc[1]))
         else:
             fn = "temp"+self.save_format
             # TODO:
+            tmp = (case_info["fn_str"] + "_%d_%d_%s" + self.save_format) % (
+                int(patch_loc[0]), int(patch_loc[1]), label_text)
             print("TODO: add label to file name")
-        return fn
+        return os.path.join(self.save_dir, tmp)
 
     def generate_tfRecord_fp(self, case_info):
         tmp = case_info["fn_str"] + self.save_format
@@ -243,7 +244,7 @@ class PairwisePatchExtractor:
                         features=tf.train.Features(feature=features))  # Create an example protocol buffer
                     tf_writer.write(example.SerializeToString())  # Serialize to string and write on the file
                 else:  # save patch to jpg, with label text and id in file name
-                    fn = self.generate_patch_fn(fixed_case_info, (loc_x[idx], ly))
+                    fn = self.generate_patch_fn(fixed_case_info, (loc_x[idx], ly), label_text=label_txt)
                     fixed_patch_arr = np.array(fixed_patch)
                     # fixed_patch_arr[np.any(fixed_patch_arr == [0, 0, 0], axis=-1)] = [255, 255, 255]  # set black background to white
                     float_patch_arr = np.array(float_patch)

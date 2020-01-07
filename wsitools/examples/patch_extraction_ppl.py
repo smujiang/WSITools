@@ -27,7 +27,8 @@ xml_fn = "../wsi_annotation/examples/e39a8d60a56844d695e9579bce8f0335.xml"
 class_label_id_csv = "../wsi_annotation/examples/class_label_id.csv"
 annotations = AnnotationRegions(xml_fn, class_label_id_csv)
 
-parameters = PairwiseExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
+# parameters = PairwiseExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
+parameters = PairwiseExtractorParameters(output_dir, save_format='.jpg', sample_cnt=-1)
 patch_extractor = PairwisePatchExtractor(tissue_detector, parameters, feature_map=fm, annotations=annotations)
 patch_cnt = patch_extractor.extract(fixed_wsi, float_wsi, offset)
 print("%d Patches have been save to %s" % (patch_cnt, output_dir))
