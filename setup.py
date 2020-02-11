@@ -5,7 +5,7 @@ if sys.version_info < (2,7):
 
 setup(
     name='wsitools',
-    version='0.1dev',
+    version='0.1.0',
     description='Whole slide image processing tools',
     packages=find_packages(),
     author="Jun Jiang",

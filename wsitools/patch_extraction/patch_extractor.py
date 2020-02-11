@@ -20,8 +20,8 @@ class ExtractorParameters:
     Class for establishing & validating parameters for patch extraction
     """
 
-    def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None, \
-                 with_anno=True, threads=20, rescale_rate=128, patch_size=128, extract_layer=0):
+    def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None,\
+                 with_anno=True, threads=20, rescale_rate=128, patch_size=128, stride=128, patch_rescale_to=128, extract_layer=0):
         if save_dir is None:  # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
         self.save_dir = save_dir  # Output dir
@@ -29,10 +29,16 @@ class ExtractorParameters:
         self.with_anno = with_anno  # If true, you need to supply an additional XML file
         self.rescale_rate = rescale_rate  # Fold size to scale the thumbnail to (for faster processing)
         self.patch_size = patch_size  # Size of patches to extract (Height & Width)
+        self.stride = stride   # stride for patch extraction
+        self.patch_rescale_to = patch_rescale_to  # rescale the extracted patches
         self.extract_layer = extract_layer  # OpenSlide Level
         self.patch_filter_by_area = patch_filter_by_area  # Amount of tissue that should be present in a patch
         self.sample_cnt = sample_cnt  # Limit the number of patches to extract (-1 == all patches)
         self.threads = threads
+
+    def cal_optimal_rescale_rate(self):
+        best_rescale = [80, 256]
+
 
 
 class PatchExtractor:
@@ -49,6 +55,8 @@ class PatchExtractor:
         self.save_dir = parameters.save_dir
         self.rescale_rate = parameters.rescale_rate  # Fold size to scale the thumbnail to (for faster processing)
         self.patch_size = parameters.patch_size  # Size of patches to extract (Height & Width)
+        self.stride = parameters.stride  # stride for patch extraction
+        self.patch_rescale_to = parameters.patch_rescale_to  # rescale the extracted patches
         self.extract_layer = parameters.extract_layer  # OpenSlide Level
         self.save_format = parameters.save_format  # Save to .tfrecord or .jpg
         self.patch_filter_by_area = parameters.patch_filter_by_area  # Amount of tissue that should be present in a patch
@@ -94,7 +102,7 @@ class PatchExtractor:
         thumbnail = wsi_obj.get_thumbnail([thumb_size_x, thumb_size_y]).convert("RGB")
         return thumbnail
 
-    def get_patch_locations(self, wsi_thumb_mask):
+    def get_patch_locations_old(self, wsi_thumb_mask):
         """
         Given a binary mask representing the thumbnail image,  either return all the pixel positions that are positive,
         or a limited number of pixels that are positive
@@ -102,6 +110,35 @@ class PatchExtractor:
         :param wsi_thumb_mask: binary mask image with 1 for yes and 0 for no
         :return: coordinate array where the positive pixels are
         """
+        pos_indices = np.where(wsi_thumb_mask > 0)
+        if self.sample_cnt == -1:  # sample all the image patches
+            loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
+            loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
+        else:
+            xy_idx = np.random.choice(pos_indices[0].shape[0], self.sample_cnt)
+            loc_y = np.array(pos_indices[0][xy_idx] * self.rescale_rate).astype(np.int)
+            loc_x = np.array(pos_indices[1][xy_idx] * self.rescale_rate).astype(np.int)
+        return [loc_x, loc_y]
+
+    def calculate_array_fence(self, top_left_x, top_left_y, bottom_right_x, bottom_right_y):
+        self.extract_layer
+        return [loc_x, loc_y]
+
+    def validate_array_fence(self):
+        print("show thumbnail and grids")
+
+    def get_patch_locations(self, wsi_thumb_mask, wsi_obj):
+        '''
+        Given a binary mask representing the thumbnail image,  either return all the pixel positions that are positive,
+        or a limited number of pixels that are positive
+        :param wsi_thumb_mask: binary mask image with 1 for yes and 0 for no
+        :param wsi_obj: OpenSlideObject
+        :return: coordinate array where the positive pixels are
+        '''
+        #TODO:
+        # 1. get connected component
+        # 2. for each component, get the array fence
+
         pos_indices = np.where(wsi_thumb_mask > 0)
         if self.sample_cnt == -1:  # sample all the image patches
             loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
