@@ -6,6 +6,7 @@ import logging
 import tensorflow as tf
 import sys
 import concurrent  # python 2.7 don't support this module
+import cv2
 from shapely.geometry import MultiPolygon, Polygon, Point
 
 logger = logging.getLogger(__name__)
@@ -103,39 +104,7 @@ class PatchExtractor:
         thumbnail = wsi_obj.get_thumbnail([thumb_size_x, thumb_size_y]).convert("RGB")
         return thumbnail
 
-    @staticmethod
-    def mask_to_polygons(mask, epsilon=10., min_area=10.):
-        """Convert a mask ndarray (binarized image) to Multipolygons"""
-        # first, find contours with cv2: it's much faster than shapely
-        image, contours, hierarchy = cv2.findContours(mask,
-                                                      cv2.RETR_CCOMP,
-                                                      cv2.CHAIN_APPROX_NONE)
-        if not contours:
-            return MultiPolygon()
-        # now messy stuff to associate parent and child contours
-        cnt_children = defaultdict(list)
-        child_contours = set()
-        assert hierarchy.shape[0] == 1
-        # http://docs.opencv.org/3.1.0/d9/d8b/tutorial_py_contours_hierarchy.html
-        for idx, (_, _, _, parent_idx) in enumerate(hierarchy[0]):
-            if parent_idx != -1:
-                child_contours.add(idx)
-                cnt_children[parent_idx].append(contours[idx])
-        # create actual polygons filtering by area (removes artifacts)
-        all_polygons = []
-        for idx, cnt in enumerate(contours):
-            if idx not in child_contours and cv2.contourArea(cnt) >= min_area:
-                assert cnt.shape[1] == 1
-                poly = Polygon(
-                    shell=cnt[:, 0, :],
-                    holes=[c[:, 0, :] for c in cnt_children.get(idx, [])
-                           if cv2.contourArea(c) >= min_area])
-                all_polygons.append(poly)
-        all_polygons = MultiPolygon(all_polygons)
-        return all_polygons
-
-
-    def get_patch_locations_old(self, wsi_thumb_mask):
+    def get_patch_locations_plus(self, wsi_thumb_mask):
         """
         Given a binary mask representing the thumbnail image,  either return all the pixel positions that are positive,
         or a limited number of pixels that are positive
@@ -143,23 +112,21 @@ class PatchExtractor:
         :param wsi_thumb_mask: binary mask image with 1 for yes and 0 for no
         :return: coordinate array where the positive pixels are
         """
-        all_polygons = mask_to_polygons(wsi_thumb_mask)
         pos_indices = np.where(wsi_thumb_mask > 0)
         loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
         loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
+        loc_x_selected = []
+        loc_y_selected = []
         x_lim = [min(loc_x), max(loc_x)]
         y_lim = [min(loc_y), max(loc_y)]
         for x in range(x_lim[0], x_lim[1], self.stride):
             for y in range(y_lim[0], y_lim[1], self.stride):
-                point = Point([x, y])  # TODO: convert to original scale
-                if point.within(all_polygons):
-                    print("TODO: add to output list")
-
-        return [loc_x, loc_y]
-
-    def calculate_array_fence(self, top_left_x, top_left_y, bottom_right_x, bottom_right_y):
-        self.extract_layer
-        return [loc_x, loc_y]
+                x_idx = int(x/self.rescale_rate)
+                y_idx = int(y/self.rescale_rate)
+                if wsi_thumb_mask[y_idx, x_idx] > 0:
+                    loc_x_selected.append(int(x))
+                    loc_y_selected.append(int(y))
+        return [loc_x_selected, loc_y_selected]
 
     def validate_array_fence(self):
         print("show thumbnail and grids")
@@ -434,7 +401,8 @@ class PatchExtractor:
                     sys.stdout.flush()
             else:
                 logger.debug("No content found in image patch x: {} y: {}".format(loc_x[idx], loc_y[idx]))
-        tf_writer.close()
+        if self.with_feature_map:
+            tf_writer.close()
         return patch_cnt
 
     def extract(self, wsi_fn):
@@ -447,7 +415,9 @@ class PatchExtractor:
         wsi_obj, case_info = self.get_case_info(wsi_fn)
         wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
         wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
-        return self.save_patches(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
+        # return self.save_patches(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
+        return self.save_patches(wsi_obj, case_info, self.get_patch_locations_plus(wsi_thumb_mask))
+
         # if logger.DEBUG == logger.root.level:
         #     import matplotlib.pyplot as plt
         #     fig, ax = plt.subplots(2, 1)
@@ -465,17 +435,25 @@ if __name__ == "__main__":
     from wsitools.patch_extraction.feature_map_creator import FeatureMapCreator
     from wsitools.wsi_annotation.region_annotation import AnnotationRegions
 
-    wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a56844d695e9579bce8f0335.tiff"  # WSI file name
-    output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
+    # wsi_fn = "/projects/shart/digital_pathology/data/PenMarking/WSIs/MELF/e39a8d60a56844d695e9579bce8f0335.tiff"  # WSI file name
+    # output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
+    #
+    # tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
+    # fm = FeatureMapCreator("./feature_maps/basic_fm_PL_eval.csv")  # use this template to create feature map
+    # xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/e39a8d60a56844d695e9579bce8f0335.xml"
+    # class_label_id_csv = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/label_id.csv"
+    # annotations = AnnotationRegions(xml_fn, class_label_id_csv)
+    # parameters = ExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
+    # patch_extractor = PatchExtractor(tissue_detector, parameters=parameters, feature_map=fm,
+    #                                  annotations=annotations)
+    # patch_num = patch_extractor.extract(wsi_fn)
+
+    wsi_fn = "H:\\CodeReview\\WSIs\\MELF\\e39a8d60a56844d695e9579bce8f0335.tiff"  # WSI file name
+    output_dir = "H:\\temp\\patches"
 
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
-    fm = FeatureMapCreator("./feature_maps/basic_fm_PL_eval.csv")  # use this template to create feature map
-    xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/e39a8d60a56844d695e9579bce8f0335.xml"
-    class_label_id_csv = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/label_id.csv"
-    annotations = AnnotationRegions(xml_fn, class_label_id_csv)
-
-    parameters = ExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
-    patch_extractor = PatchExtractor(tissue_detector, parameters=parameters, feature_map=fm,
-                                     annotations=annotations)
+    parameters = ExtractorParameters(output_dir, patch_size=256, stride=256, patch_filter_by_area=0.3, save_format='.jpg', sample_cnt=-1)
+    patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
     patch_num = patch_extractor.extract(wsi_fn)
+
     print("%d Patches have been save to %s" % (patch_num, output_dir))
