@@ -6,6 +6,7 @@ import logging
 import tensorflow as tf
 import sys
 import concurrent  # python 2.7 don't support this module
+from shapely.geometry import MultiPolygon, Polygon, Point
 
 logger = logging.getLogger(__name__)
 ch = logging.StreamHandler()
@@ -102,6 +103,38 @@ class PatchExtractor:
         thumbnail = wsi_obj.get_thumbnail([thumb_size_x, thumb_size_y]).convert("RGB")
         return thumbnail
 
+    @staticmethod
+    def mask_to_polygons(mask, epsilon=10., min_area=10.):
+        """Convert a mask ndarray (binarized image) to Multipolygons"""
+        # first, find contours with cv2: it's much faster than shapely
+        image, contours, hierarchy = cv2.findContours(mask,
+                                                      cv2.RETR_CCOMP,
+                                                      cv2.CHAIN_APPROX_NONE)
+        if not contours:
+            return MultiPolygon()
+        # now messy stuff to associate parent and child contours
+        cnt_children = defaultdict(list)
+        child_contours = set()
+        assert hierarchy.shape[0] == 1
+        # http://docs.opencv.org/3.1.0/d9/d8b/tutorial_py_contours_hierarchy.html
+        for idx, (_, _, _, parent_idx) in enumerate(hierarchy[0]):
+            if parent_idx != -1:
+                child_contours.add(idx)
+                cnt_children[parent_idx].append(contours[idx])
+        # create actual polygons filtering by area (removes artifacts)
+        all_polygons = []
+        for idx, cnt in enumerate(contours):
+            if idx not in child_contours and cv2.contourArea(cnt) >= min_area:
+                assert cnt.shape[1] == 1
+                poly = Polygon(
+                    shell=cnt[:, 0, :],
+                    holes=[c[:, 0, :] for c in cnt_children.get(idx, [])
+                           if cv2.contourArea(c) >= min_area])
+                all_polygons.append(poly)
+        all_polygons = MultiPolygon(all_polygons)
+        return all_polygons
+
+
     def get_patch_locations_old(self, wsi_thumb_mask):
         """
         Given a binary mask representing the thumbnail image,  either return all the pixel positions that are positive,
@@ -110,14 +143,18 @@ class PatchExtractor:
         :param wsi_thumb_mask: binary mask image with 1 for yes and 0 for no
         :return: coordinate array where the positive pixels are
         """
+        all_polygons = mask_to_polygons(wsi_thumb_mask)
         pos_indices = np.where(wsi_thumb_mask > 0)
-        if self.sample_cnt == -1:  # sample all the image patches
-            loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
-            loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
-        else:
-            xy_idx = np.random.choice(pos_indices[0].shape[0], self.sample_cnt)
-            loc_y = np.array(pos_indices[0][xy_idx] * self.rescale_rate).astype(np.int)
-            loc_x = np.array(pos_indices[1][xy_idx] * self.rescale_rate).astype(np.int)
+        loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
+        loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
+        x_lim = [min(loc_x), max(loc_x)]
+        y_lim = [min(loc_y), max(loc_y)]
+        for x in range(x_lim[0], x_lim[1], self.stride):
+            for y in range(y_lim[0], y_lim[1], self.stride):
+                point = Point([x, y])  # TODO: convert to original scale
+                if point.within(all_polygons):
+                    print("TODO: add to output list")
+
         return [loc_x, loc_y]
 
     def calculate_array_fence(self, top_left_x, top_left_y, bottom_right_x, bottom_right_y):
