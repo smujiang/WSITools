@@ -506,7 +506,7 @@ if __name__ == "__main__":
     patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
     patch_num = patch_extractor.extract(wsi_fn)
 
-    ROIs = [[35000, 35000, 43000, 43000], [12000, 19000, 25000, 30000]]
+    ROIs = [[35000, 35000, 43000, 43000], [12000, 19000, 25000, 30000]]  # coordinates are from level 0
     patch_extractor.extract_ROIs(wsi_fn, ROIs)
 
     print("%d Patches have been save to %s" % (patch_num, output_dir))
