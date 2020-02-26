@@ -6,8 +6,8 @@ import logging
 import tensorflow as tf
 import sys
 import concurrent  # python 2.7 don't support this module
-import cv2
-from shapely.geometry import MultiPolygon, Polygon, Point
+from PIL import Image, ImageDraw
+from scipy import ndimage
 
 logger = logging.getLogger(__name__)
 ch = logging.StreamHandler()
@@ -22,8 +22,9 @@ class ExtractorParameters:
     Class for establishing & validating parameters for patch extraction
     """
 
-    def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None,\
-                 with_anno=True, threads=20, rescale_rate=128, patch_size=128, stride=128, patch_rescale_to=128, extract_layer=0):
+    def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None, \
+                 with_anno=True, threads=20, rescale_rate=128, patch_size=128, stride=128, patch_rescale_to=128,
+                 extract_layer=0):
         if save_dir is None:  # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
         self.save_dir = save_dir  # Output dir
@@ -31,16 +32,12 @@ class ExtractorParameters:
         self.with_anno = with_anno  # If true, you need to supply an additional XML file
         self.rescale_rate = rescale_rate  # Fold size to scale the thumbnail to (for faster processing)
         self.patch_size = patch_size  # Size of patches to extract (Height & Width)
-        self.stride = stride   # stride for patch extraction
+        self.stride = stride  # stride for patch extraction
         self.patch_rescale_to = patch_rescale_to  # rescale the extracted patches
         self.extract_layer = extract_layer  # OpenSlide Level
         self.patch_filter_by_area = patch_filter_by_area  # Amount of tissue that should be present in a patch
         self.sample_cnt = sample_cnt  # Limit the number of patches to extract (-1 == all patches)
         self.threads = threads
-
-    def cal_optimal_rescale_rate(self):
-        best_rescale = [80, 256]
-
 
 
 class PatchExtractor:
@@ -104,7 +101,7 @@ class PatchExtractor:
         thumbnail = wsi_obj.get_thumbnail([thumb_size_x, thumb_size_y]).convert("RGB")
         return thumbnail
 
-    def get_patch_locations_plus(self, wsi_thumb_mask):
+    def get_patch_locations_plus(self, wsi_thumb_mask, level_downsamples):
         """
         Given a binary mask representing the thumbnail image,  either return all the pixel positions that are positive,
         or a limited number of pixels that are positive
@@ -112,6 +109,8 @@ class PatchExtractor:
         :param wsi_thumb_mask: binary mask image with 1 for yes and 0 for no
         :return: coordinate array where the positive pixels are
         """
+
+        wsi_thumb_mask = ndimage.binary_erosion(wsi_thumb_mask)
         pos_indices = np.where(wsi_thumb_mask > 0)
         loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
         loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
@@ -119,16 +118,53 @@ class PatchExtractor:
         loc_y_selected = []
         x_lim = [min(loc_x), max(loc_x)]
         y_lim = [min(loc_y), max(loc_y)]
-        for x in range(x_lim[0], x_lim[1], self.stride):
-            for y in range(y_lim[0], y_lim[1], self.stride):
-                x_idx = int(x/self.rescale_rate)
-                y_idx = int(y/self.rescale_rate)
-                if wsi_thumb_mask[y_idx, x_idx] > 0:
+        for x in range(x_lim[0], x_lim[1], int(self.stride*level_downsamples[self.extract_layer])):
+            for y in range(y_lim[0], y_lim[1], int(self.stride*level_downsamples[self.extract_layer])):
+                x_idx = int(x / self.rescale_rate)
+                y_idx = int(y / self.rescale_rate)
+                x_idx_1 = int((x+self.patch_size * level_downsamples[self.extract_layer]) / self.rescale_rate)
+                y_idx_1 = int((y+self.patch_size * level_downsamples[self.extract_layer]) / self.rescale_rate)
+                if x_idx_1 >= wsi_thumb_mask.shape[1]:
+                    x_idx_1 = x_idx
+                if y_idx_1 >= wsi_thumb_mask.shape[0]:
+                    y_idx_1 = y_idx
+                if np.count_nonzero(wsi_thumb_mask[y_idx:y_idx_1, x_idx:x_idx_1]) > 0:
                     loc_x_selected.append(int(x))
                     loc_y_selected.append(int(y))
         return [loc_x_selected, loc_y_selected]
 
-    def validate_array_fence(self):
+    def get_patch_locations_from_ROIs(self, ROIs, level_downsamples):
+        """
+        Given a ROI list,  either return all the pixel positions that are in ROI
+        :param ROIs: ROIs [[min_x, min_y, max_x, max_y], ...]
+        :return: coordinate array where the positive pixels are
+        """
+        loc_x_selected = []
+        loc_y_selected = []
+        for roi in ROIs:
+            x_lim = [roi[0], roi[2]]
+            y_lim = [roi[1], roi[3]]
+            for x in range(x_lim[0], x_lim[1], int(self.stride*level_downsamples[self.extract_layer])):
+                for y in range(y_lim[0], y_lim[1], int(self.stride*level_downsamples[self.extract_layer])):
+                    loc_x_selected.append(int(x))
+                    loc_y_selected.append(int(y))
+        return [loc_x_selected, loc_y_selected]
+
+    def validate_extract_locations(self, locations, thumbnail, level_downsamples):
+        """
+        create a figure to validate the locations
+        :param locations:
+        :return:
+        """
+        draw = ImageDraw.Draw(thumbnail)
+        [loc_x_selected, loc_y_selected] = locations
+        for i in range(len(loc_x_selected)):
+            xy = [int(loc_x_selected[i] / self.rescale_rate),
+                  int(loc_y_selected[i] / self.rescale_rate),
+                  int((loc_x_selected[i] + self.patch_size*level_downsamples[self.extract_layer]) / self.rescale_rate),
+                  int((loc_y_selected[i] + self.patch_size*level_downsamples[self.extract_layer]) / self.rescale_rate)]
+            draw.rectangle(xy, outline='green')
+        thumbnail.show()
         print("show thumbnail and grids")
 
     def get_patch_locations(self, wsi_thumb_mask, wsi_obj):
@@ -139,7 +175,7 @@ class PatchExtractor:
         :param wsi_obj: OpenSlideObject
         :return: coordinate array where the positive pixels are
         '''
-        #TODO:
+        # TODO:
         # 1. get connected component
         # 2. for each component, get the array fence
 
@@ -206,7 +242,7 @@ class PatchExtractor:
             tmp = (case_info["fn_str"] + "_%d_%d" + self.save_format) % (int(patch_loc[0]), int(patch_loc[1]))
         else:
             tmp = (case_info["fn_str"] + "_%d_%d_%s" + self.save_format) % (
-            int(patch_loc[0]), int(patch_loc[1]), label_text)
+                int(patch_loc[0]), int(patch_loc[1]), label_text)
         return os.path.join(self.save_dir, tmp)
 
     def generate_tfRecords_fp(self, case_info):
@@ -407,16 +443,16 @@ class PatchExtractor:
 
     def extract(self, wsi_fn):
         """
-        Extract image patches
-
+        Extract image patches from all the foreground(tissue)
         :param wsi_fn: a single filename of a WSI
         :return: Number of patches written
         """
         wsi_obj, case_info = self.get_case_info(wsi_fn)
         wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
         wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
-        # return self.save_patches(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
-        return self.save_patches(wsi_obj, case_info, self.get_patch_locations_plus(wsi_thumb_mask))
+        extract_locations = self.get_patch_locations_plus(wsi_thumb_mask, wsi_obj.level_downsamples)
+        self.validate_extract_locations(extract_locations, wsi_thumb, wsi_obj.level_downsamples)
+        return self.save_patches(wsi_obj, case_info, extract_locations)
 
         # if logger.DEBUG == logger.root.level:
         #     import matplotlib.pyplot as plt
@@ -428,6 +464,19 @@ class PatchExtractor:
         #     return self.save_patch_without_annotation(wsi_obj, case_info, self.get_patch_locations(wsi_thumb_mask))
         # else:
         #     raise Exception("Saving patches with annotations is not supported yet.")
+
+    def extract_ROIs(self, wsi_fn, ROIs):
+        '''
+        extract patches from ROI list
+        :param wsi_fn: WSI file name
+        :param ROIs:   example: ROIs = [[35000, 35000, 43000, 43000], [12000, 19000, 25000, 30000]]
+        :return:
+        '''
+        wsi_obj, case_info = self.get_case_info(wsi_fn)
+        extract_locations = self.get_patch_locations_from_ROIs(ROIs, wsi_obj.level_downsamples)
+        wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail for validation
+        self.validate_extract_locations(extract_locations, wsi_thumb, wsi_obj.level_downsamples)
+        return self.save_patches(wsi_obj, case_info, extract_locations)
 
 
 if __name__ == "__main__":
@@ -448,11 +497,12 @@ if __name__ == "__main__":
     #                                  annotations=annotations)
     # patch_num = patch_extractor.extract(wsi_fn)
 
-    wsi_fn = "H:\\CodeReview\\WSIs\\MELF\\e39a8d60a56844d695e9579bce8f0335.tiff"  # WSI file name
+    wsi_fn = "H:\\CodeReview\\WSIs\\MELF-Clean\\54742d6c5d704efa8f0814456453573a.tiff"  # WSI file name
     output_dir = "H:\\temp\\patches"
 
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
-    parameters = ExtractorParameters(output_dir, patch_size=256, stride=256, patch_filter_by_area=0.3, save_format='.jpg', sample_cnt=-1)
+    parameters = ExtractorParameters(output_dir, patch_size=512, stride=512, extract_layer=3, patch_filter_by_area=0.3,
+                                     save_format='.jpg', sample_cnt=-1)
     patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
     patch_num = patch_extractor.extract(wsi_fn)
 
