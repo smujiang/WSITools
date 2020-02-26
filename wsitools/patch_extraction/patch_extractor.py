@@ -101,7 +101,7 @@ class PatchExtractor:
         thumbnail = wsi_obj.get_thumbnail([thumb_size_x, thumb_size_y]).convert("RGB")
         return thumbnail
 
-    def get_patch_locations_plus(self, wsi_thumb_mask, level_downsamples):
+    def get_patch_locations(self, wsi_thumb_mask, level_downsamples):
         """
         Given a binary mask representing the thumbnail image,  either return all the pixel positions that are positive,
         or a limited number of pixels that are positive
@@ -166,28 +166,6 @@ class PatchExtractor:
             draw.rectangle(xy, outline='green')
         thumbnail.show()
         print("show thumbnail and grids")
-
-    def get_patch_locations(self, wsi_thumb_mask, wsi_obj):
-        '''
-        Given a binary mask representing the thumbnail image,  either return all the pixel positions that are positive,
-        or a limited number of pixels that are positive
-        :param wsi_thumb_mask: binary mask image with 1 for yes and 0 for no
-        :param wsi_obj: OpenSlideObject
-        :return: coordinate array where the positive pixels are
-        '''
-        # TODO:
-        # 1. get connected component
-        # 2. for each component, get the array fence
-
-        pos_indices = np.where(wsi_thumb_mask > 0)
-        if self.sample_cnt == -1:  # sample all the image patches
-            loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
-            loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
-        else:
-            xy_idx = np.random.choice(pos_indices[0].shape[0], self.sample_cnt)
-            loc_y = np.array(pos_indices[0][xy_idx] * self.rescale_rate).astype(np.int)
-            loc_x = np.array(pos_indices[1][xy_idx] * self.rescale_rate).astype(np.int)
-        return [loc_x, loc_y]
 
     @staticmethod
     def filter_by_content_area(rgb_image_array, area_threshold=0.4, brightness=85):
@@ -450,7 +428,7 @@ class PatchExtractor:
         wsi_obj, case_info = self.get_case_info(wsi_fn)
         wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
         wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
-        extract_locations = self.get_patch_locations_plus(wsi_thumb_mask, wsi_obj.level_downsamples)
+        extract_locations = self.get_patch_locations(wsi_thumb_mask, wsi_obj.level_downsamples)
         self.validate_extract_locations(extract_locations, wsi_thumb, wsi_obj.level_downsamples)
         return self.save_patches(wsi_obj, case_info, extract_locations)
 
