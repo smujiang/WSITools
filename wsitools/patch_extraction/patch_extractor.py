@@ -165,7 +165,7 @@ class PatchExtractor:
                   int((loc_y_selected[i] + self.patch_size*level_downsamples[self.extract_layer]) / self.rescale_rate)]
             draw.rectangle(xy, outline='green')
         thumbnail.show()
-        print("show thumbnail and grids")
+        print("show thumbnail and grids %d", len(loc_x_selected))
 
     @staticmethod
     def filter_by_content_area(rgb_image_array, area_threshold=0.4, brightness=85):
@@ -466,8 +466,8 @@ if __name__ == "__main__":
     # output_dir = "/projects/shart/digital_pathology/data/PenMarking/temp"
     #
     # tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
-    # fm = FeatureMapCreator("./feature_maps/basic_fm_PL_eval.csv")  # use this template to create feature map
-    # xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/e39a8d60a56844d695e9579bce8f0335.xml"
+    # # fm = FeatureMapCreator("./feature_maps/basic_fm_PL_eval.csv")  # use this template to create feature map
+    # # xml_fn = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/e39a8d60a56844d695e9579bce8f0335.xml"
     # class_label_id_csv = "/projects/shart/digital_pathology/data/PenMarking/annotations/temp/label_id.csv"
     # annotations = AnnotationRegions(xml_fn, class_label_id_csv)
     # parameters = ExtractorParameters(output_dir, save_format='.tfrecord', sample_cnt=-1)
@@ -475,16 +475,16 @@ if __name__ == "__main__":
     #                                  annotations=annotations)
     # patch_num = patch_extractor.extract(wsi_fn)
 
-    wsi_fn = "H:\\CodeReview\\WSIs\\MELF-Clean\\54742d6c5d704efa8f0814456453573a.tiff"  # WSI file name
-    output_dir = "H:\\temp\\patches"
+    wsi_fn = "\\\\mfad\\researchmn\\HCPR\\HCPR-GYNECOLOGICALTUMORMICROENVIRONMENT\\WSIs\\OCMC-016.svs"  # WSI file name
+    output_dir = "H:\\OvarianCancer\\ImageData\\Patches\\OCMC-016"
 
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
-    parameters = ExtractorParameters(output_dir, patch_size=512, stride=512, extract_layer=3, patch_filter_by_area=0.3,
+    parameters = ExtractorParameters(output_dir, patch_size=500, stride=500, extract_layer=0, patch_filter_by_area=0.3,
                                      save_format='.jpg', sample_cnt=-1)
     patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
     patch_num = patch_extractor.extract(wsi_fn)
-
-    ROIs = [[35000, 35000, 43000, 43000], [12000, 19000, 25000, 30000]]  # coordinates are from level 0
-    patch_extractor.extract_ROIs(wsi_fn, ROIs)
+    #
+    # ROIs = [[35000, 35000, 43000, 43000], [12000, 19000, 25000, 30000]]  # coordinates are from level 0
+    # patch_extractor.extract_ROIs(wsi_fn, ROIs)
 
     print("%d Patches have been save to %s" % (patch_num, output_dir))
