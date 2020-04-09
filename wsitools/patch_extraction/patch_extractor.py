@@ -251,7 +251,7 @@ class PatchExtractor:
             if self.with_anno:
                 label_id, label_txt = self.get_patch_label([x, y])
             else:
-                label_txt = ""
+                label_txt = None
                 label_id = -1  # can't delete this line, it will be used if save patch into tfRecords
 
             if self.with_feature_map:  # Append data to tfRecord file
@@ -385,7 +385,7 @@ class PatchExtractor:
                 if self.with_anno:
                     label_id, label_txt = self.get_patch_label([loc_x[idx], loc_y[idx]])
                 else:
-                    label_txt = ""
+                    label_txt = None
                     label_id = -1  # can't delete this line, it will be used if save patch into tfRecords
                 if self.with_feature_map:  # Append data to tfRecord file
                     # TODO: maybe need to find another way to do this
