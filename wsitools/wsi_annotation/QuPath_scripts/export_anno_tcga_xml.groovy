@@ -16,7 +16,8 @@
 import qupath.lib.images.servers.ImageServer
 import qupath.lib.objects.PathObject
 import qupath.lib.regions.RegionRequest
-import qupath.lib.roi.PathROIToolsAwt
+// import qupath.lib.roi.PathROIToolsAwt  //old version of QuPath
+// import qupath.lib.roi.RoiTools //newer version of QuPath
 import qupath.lib.scripting.QP
 
 import javax.imageio.ImageIO
@@ -70,7 +71,7 @@ if (project == null) {
     return
 }
 
-String root_dir = "H:\\temp"  # modify this root_dir to specify where you would like to save your export
+String root_dir = "H:\\temp"  // modify this root_dir to specify where you would like to save your export
 
 // loop through all the entries to get the annotation label map
 File fp = new File(root_dir, "class_label_id.csv")
@@ -132,11 +133,12 @@ for (entry in project.getImageList()) {
 //                wrt_str += str_points
 //            }
 //        }
-        points = anno.getROI().getPolygonPoints()
-        for (p in points){
-            points_str = String.format(vertexStr, p.x, p.y)
-            wrt_str += points_str
-        }
+        // if you would like to export point annotations, uncomment the four below lines.
+//         points = anno.getROI().getPolygonPoints()
+//         for (p in points){
+//             points_str = String.format(vertexStr, p.x, p.y)
+//             wrt_str += points_str
+//         }
         wrt_str += regionStrTail
     }
     wrt_str += xmlTail
