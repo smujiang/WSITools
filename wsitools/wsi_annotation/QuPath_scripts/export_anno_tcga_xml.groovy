@@ -126,6 +126,7 @@ for (entry in project.getImageList()) {
         anno_geo_type = get_geoType(anno.getROI().getClass().toString())
         region_str = String.format(regionStrHead, anno_cnt, id, anno.getPathClass(), anno_geo_type)  //anno.getPathClass() return the class label
         wrt_str += region_str
+        // if you would like to export point annotations, uncomment the below lines.
 //        if (!(anno.getROI() instanceof PointsROI)){   // annotations are not points for offset calculation
 //            points = anno.getROI().getPolygonPoints()
 //            for (p in points){
@@ -133,12 +134,12 @@ for (entry in project.getImageList()) {
 //                wrt_str += str_points
 //            }
 //        }
-        // if you would like to export point annotations, uncomment the four below lines.
-//         points = anno.getROI().getPolygonPoints()
-//         for (p in points){
-//             points_str = String.format(vertexStr, p.x, p.y)
-//             wrt_str += points_str
-//         }
+        // if you would like to export polygon annotations, uncomment the four below lines.
+        points = anno.getROI().getPolygonPoints()
+        for (p in points){
+            points_str = String.format(vertexStr, p.x, p.y)
+            wrt_str += points_str
+        }
         wrt_str += regionStrTail
     }
     wrt_str += xmlTail
