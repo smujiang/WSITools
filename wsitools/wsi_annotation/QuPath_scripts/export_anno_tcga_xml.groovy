@@ -135,7 +135,8 @@ for (entry in project.getImageList()) {
 //            }
 //        }
         // if you would like to export polygon annotations, uncomment the four below lines.
-        points = anno.getROI().getPolygonPoints()
+//         points = anno.getROI().getPolygonPoints() // getPolygonPoints() has been replaced due to QuPath version upgrade
+        points = anno.getROI().getAllPoints()
         for (p in points){
             points_str = String.format(vertexStr, p.x, p.y)
             wrt_str += points_str
