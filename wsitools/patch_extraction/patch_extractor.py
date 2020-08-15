@@ -22,12 +22,13 @@ class ExtractorParameters:
     Class for establishing & validating parameters for patch extraction
     """
 
-    def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None, \
+    def __init__(self, save_dir=None, log_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None, \
                  with_anno=True, threads=20, rescale_rate=128, patch_size=128, stride=128, patch_rescale_to=None,
                  extract_layer=0):
         if save_dir is None:  # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
         self.save_dir = save_dir  # Output dir
+        self.log_dir = log_dir  # Output dir
         self.save_format = save_format  # Save to .tfrecord or .jpg
         self.with_anno = with_anno  # If true, you need to supply an additional XML file
         self.rescale_rate = rescale_rate  # Fold size to scale the thumbnail to (for faster processing)
@@ -52,6 +53,7 @@ class PatchExtractor:
         self.tissue_detector = detector
         self.threads = parameters.threads
         self.save_dir = parameters.save_dir
+        self.log_dir = parameters.log_dir
         self.rescale_rate = parameters.rescale_rate  # Fold size to scale the thumbnail to (for faster processing)
         self.patch_size = parameters.patch_size  # Size of patches to extract (Height & Width)
         self.stride = parameters.stride  # stride for patch extraction
@@ -150,7 +152,7 @@ class PatchExtractor:
                     loc_y_selected.append(int(y))
         return [loc_x_selected, loc_y_selected]
 
-    def validate_extract_locations(self, locations, thumbnail, level_downsamples):
+    def validate_extract_locations(self, case_info, locations, thumbnail, level_downsamples):
         """
         create a figure to validate the locations
         :param locations:
@@ -164,8 +166,13 @@ class PatchExtractor:
                   int((loc_x_selected[i] + self.patch_size*level_downsamples[self.extract_layer]) / self.rescale_rate),
                   int((loc_y_selected[i] + self.patch_size*level_downsamples[self.extract_layer]) / self.rescale_rate)]
             draw.rectangle(xy, outline='green')
-        thumbnail.show()
-        print("show thumbnail and grids %d", len(loc_x_selected))
+        # thumbnail.show()
+        print("show thumbnail and grids %d" % len(loc_x_selected))
+        thumb_fn = os.path.join(self.log_dir, case_info["fn_str"]+"_extraction_grid_" + str(len(loc_x_selected)) + ".png")
+        if not os.path.exists(self.log_dir):
+            os.makedirs(self.log_dir)
+        thumbnail.save(thumb_fn)
+
 
     @staticmethod
     def filter_by_content_area(rgb_image_array, area_threshold=0.4, brightness=85):
@@ -437,7 +444,7 @@ class PatchExtractor:
         wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
         wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
         extract_locations = self.get_patch_locations(wsi_thumb_mask, wsi_obj.level_downsamples)
-        self.validate_extract_locations(extract_locations, wsi_thumb, wsi_obj.level_downsamples)
+        self.validate_extract_locations(case_info, extract_locations, wsi_thumb, wsi_obj.level_downsamples)
         return self.save_patches(wsi_obj, case_info, extract_locations)
 
         # if logger.DEBUG == logger.root.level:
@@ -461,7 +468,7 @@ class PatchExtractor:
         wsi_obj, case_info = self.get_case_info(wsi_fn)
         extract_locations = self.get_patch_locations_from_ROIs(ROIs, wsi_obj.level_downsamples)
         wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail for validation
-        self.validate_extract_locations(extract_locations, wsi_thumb, wsi_obj.level_downsamples)
+        self.validate_extract_locations(case_info, extract_locations, wsi_thumb, wsi_obj.level_downsamples)
         return self.save_patches(wsi_obj, case_info, extract_locations)
 
 
