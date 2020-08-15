@@ -23,7 +23,7 @@ class ExtractorParameters:
     """
 
     def __init__(self, save_dir=None, save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None, \
-                 with_anno=True, threads=20, rescale_rate=128, patch_size=128, stride=128, patch_rescale_to=128,
+                 with_anno=True, threads=20, rescale_rate=128, patch_size=128, stride=128, patch_rescale_to=None,
                  extract_layer=0):
         if save_dir is None:  # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
@@ -408,9 +408,15 @@ class PatchExtractor:
                     if not os.path.exists(os.path.split(fn)[0]):
                         os.makedirs(os.path.split(fn)[0])
                     if self.save_format == ".jpg":
-                        patch.save(fn)
+                        if self.patch_rescale_to:
+                            patch.resize([self.patch_rescale_to, self.patch_rescale_to]).save(fn)
+                        else:
+                            patch.save(fn)
                     elif self.save_format == ".png":
-                        patch.convert("RGBA").save(fn)
+                        if self.patch_rescale_to:
+                            patch.resize([self.patch_rescale_to, self.patch_rescale_to]).convert("RGBA").save(fn)
+                        else:
+                            patch.convert("RGBA").save(fn)
                     else:
                         raise Exception("Can't recognize save format")
                     logger.info('\rWrote {} to image files '.format(patch_cnt))
