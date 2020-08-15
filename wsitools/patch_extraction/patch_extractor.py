@@ -221,7 +221,7 @@ class PatchExtractor:
         else:
             tmp = (case_info["fn_str"] + "_%d_%d_%s" + self.save_format) % (
                 int(patch_loc[0]), int(patch_loc[1]), label_text)
-        return os.path.join(self.save_dir, tmp)
+        return os.path.join(self.save_dir, case_info["fn_str"], tmp)
 
     def generate_tfRecords_fp(self, case_info):
         """
@@ -405,6 +405,8 @@ class PatchExtractor:
                     #     plt.imshow(patch)
                     #     plt.show()
                     fn = self.generate_patch_fn(case_info, (loc_x[idx], loc_y[idx]), label_text=label_txt)
+                    if not os.path.exists(os.path.split(fn)[0]):
+                        os.makedirs(os.path.split(fn)[0])
                     if self.save_format == ".jpg":
                         patch.save(fn)
                     elif self.save_format == ".png":
