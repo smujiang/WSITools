@@ -168,7 +168,7 @@ class PatchExtractor:
             draw.rectangle(xy, outline='green')
         # thumbnail.show()
         print("show thumbnail and grids %d" % len(loc_x_selected))
-        if self.log_dir is None or not os.path.exists(self.log_dir):
+        if self.log_dir is None or (not os.path.exists(self.log_dir)):
             raise Exception("log dir is None or invalid, can't save validation image")
         else:
             thumb_fn = os.path.join(self.log_dir, case_info["fn_str"]+"_extraction_grid_" + str(len(loc_x_selected)) + ".png")

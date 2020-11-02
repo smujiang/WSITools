@@ -3,6 +3,7 @@ import os
 from scipy import ndimage
 from skimage.color import rgb2lab
 from sklearn.naive_bayes import GaussianNB
+from sklearn import svm
 import joblib
 
 
@@ -25,6 +26,15 @@ class TissueDetector:
             gnb_bkg.fit(bkg_train_data[:, 1:], bkg_train_data[:, 0])
         return gnb_bkg
 
+    def get_svm_model(self):
+        if not os.path.exists(self.tsv_name):
+            return self.get_default_gnb_model()
+        else:
+            bkg_train_data = self.read_training_dim(3)
+            svm_bkg = svm.SVC()
+            svm_bkg.fit(bkg_train_data[:, 1:], bkg_train_data[:, 0])
+        return svm_bkg
+
     def save_gnb_model(self, save_fn):
         gnb_classifier = self.get_gnb_model()
         joblib.dump(gnb_classifier, save_fn)
@@ -42,6 +52,14 @@ class TissueDetector:
         gnb_bkg.fit(bkg_train_data[:, 1:], bkg_train_data[:, 0])
         return gnb_bkg
 
+    def get_default_svm_model(self):
+        cwd = os.path.dirname(__file__)
+        self.tsv_name = os.path.join(cwd, 'model_files/HE_tissue_others.tsv')  # this file is created by our annotation tool
+        bkg_train_data = self.read_training_dim(3)
+        gnb_bkg = SVM()
+        gnb_bkg.fit(bkg_train_data[:, 1:], bkg_train_data[:, 0])
+        return gnb_bkg
+
     def predict(self, wsi_thumb_img, open_operation=False):
         if self.name == "LAB_Threshold":
             lab_img = rgb2lab(wsi_thumb_img)
@@ -54,6 +72,12 @@ class TissueDetector:
             marked_thumbnail = np.array(wsi_thumb_img)
             gnb_model = self.get_gnb_model()
             cal = gnb_model.predict_proba(marked_thumbnail.reshape(-1, 3))
+            cal = cal.reshape(marked_thumbnail.shape[0], marked_thumbnail.shape[1], 2)
+            binary_img_array = cal[:, :, 1] > self.threshold
+        elif self.name == "SVM":  # Support vector machine
+            marked_thumbnail = np.array(wsi_thumb_img)
+            svm_model = self.get_gnb_model()
+            cal = svm_model.predict_proba(marked_thumbnail.reshape(-1, 3))
             cal = cal.reshape(marked_thumbnail.shape[0], marked_thumbnail.shape[1], 2)
             binary_img_array = cal[:, :, 1] > self.threshold
         else:
