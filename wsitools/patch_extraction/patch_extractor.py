@@ -515,7 +515,7 @@ if __name__ == "__main__":
     In our package, we can call the function like below:
     parameters = ExtractorParameters(output_dir, log_dir=log_dir, save_format='.jpg', patch_size=1024, stride=1024, sample_cnt=-1, extract_layer=0, patch_rescale_to=512)
     '''
-    
+
     patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
     patch_num = patch_extractor.extract(wsi_fn)
     #
