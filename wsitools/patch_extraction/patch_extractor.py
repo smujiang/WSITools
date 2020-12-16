@@ -168,13 +168,16 @@ class PatchExtractor:
             draw.rectangle(xy, outline='green')
         # thumbnail.show()
         print("show thumbnail and grids %d" % len(loc_x_selected))
-        if self.log_dir is None or (not os.path.exists(self.log_dir)):
-            raise Exception("log dir is None or invalid, can't save validation image")
-        else:
-            thumb_fn = os.path.join(self.log_dir, case_info["fn_str"]+"_extraction_grid_" + str(len(loc_x_selected)) + ".png")
+        if self.log_dir is None:
+            print("log dir is None, validation image will not be saved")
         if not os.path.exists(self.log_dir):
-            os.makedirs(self.log_dir)
-        thumbnail.save(thumb_fn)
+            try:
+                os.makedirs(self.log_dir,  exist_ok=True)
+            except OSError:
+                raise Exception("Can't create/access log_dir, unable to save validation image")
+        if os.path.exists(self.log_dir):
+            thumb_fn = os.path.join(self.log_dir, case_info["fn_str"]+"_extraction_grid_" + str(len(loc_x_selected)) + ".png")
+            thumbnail.save(thumb_fn)
 
     @staticmethod
     def filter_by_content_area(rgb_image_array, area_threshold=0.4, brightness=85):
@@ -249,6 +252,8 @@ class PatchExtractor:
                                     self.extract_layer,
                                     (self.patch_size, self.patch_size)
                                     ).convert("RGB")
+        if self.patch_rescale_to:
+            patch = patch.resize([self.patch_rescale_to, self.patch_rescale_to])
 
         # Only print out the patches that contain tissue in them (e.g. Content Rich)
         Content_rich = True
@@ -385,6 +390,8 @@ class PatchExtractor:
                                         self.extract_layer,
                                         (self.patch_size, self.patch_size)
                                         ).convert("RGB")
+            if self.patch_rescale_to:
+                patch = patch.resize([self.patch_rescale_to, self.patch_rescale_to])
             # Only print out the patches that contain tissue in them (e.g. Content Rich)
             Content_rich = True
             if self.patch_filter_by_area:  # if we need to filter the image patch
@@ -417,19 +424,17 @@ class PatchExtractor:
                     if not os.path.exists(os.path.split(fn)[0]):
                         os.makedirs(os.path.split(fn)[0])
                     if self.save_format == ".jpg":
-                        if self.patch_rescale_to:
-                            patch.resize([self.patch_rescale_to, self.patch_rescale_to]).save(fn)
-                        else:
-                            patch.save(fn)
+                        patch.save(fn)
                     elif self.save_format == ".png":
-                        if self.patch_rescale_to:
-                            patch.resize([self.patch_rescale_to, self.patch_rescale_to]).convert("RGBA").save(fn)
-                        else:
-                            patch.convert("RGBA").save(fn)
+                        patch.convert("RGBA").save(fn)
                     else:
                         raise Exception("Can't recognize save format")
                     logger.info('\rWrote {} to image files '.format(patch_cnt))
                     sys.stdout.flush()
+                if self.sample_cnt == patch_cnt:
+                    if self.with_feature_map:
+                        tf_writer.close()
+                    return patch_cnt
             else:
                 logger.debug("No content found in image patch x: {} y: {}".format(loc_x[idx], loc_y[idx]))
         if self.with_feature_map:
