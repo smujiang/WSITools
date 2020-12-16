@@ -505,12 +505,17 @@ if __name__ == "__main__":
     log_dir = "H:\\OvarianCancer\\ImageData\\Patches\\OCMC-016_log"
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
 
-    # parameters = ExtractorParameters(output_dir, patch_size=500, stride=500, extract_layer=0, patch_filter_by_area=0.3,
-    #                                  save_format='.jpg', sample_cnt=-1)
+    parameters = ExtractorParameters(output_dir, patch_size=500, stride=500, extract_layer=0, patch_filter_by_area=0.3,
+                                      save_format='.jpg', sample_cnt=-1)
 
-    parameters = ExtractorParameters(output_dir, log_dir=log_dir, save_format='.jpg', patch_size=512, stride=512,
-                                     sample_cnt=-1, extract_layer=0, patch_filter_by_area=0.5, patch_rescale_to=256)
-
+    '''
+    For example:
+    Slide resolution is 40x, but we need 20X image patches (size 512*512)
+    WSI level downsamples = [1 , 4, 16, 32], so can't directly read from level 1 to match our requirements
+    In our package, we can call the function like below:
+    parameters = ExtractorParameters(output_dir, log_dir=log_dir, save_format='.jpg', patch_size=1024, stride=1024, sample_cnt=-1, extract_layer=0, patch_rescale_to=512)
+    '''
+    
     patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
     patch_num = patch_extractor.extract(wsi_fn)
     #
