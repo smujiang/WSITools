@@ -158,24 +158,27 @@ class PatchExtractor:
         :param locations:
         :return:
         """
-        draw = ImageDraw.Draw(thumbnail)
-        [loc_x_selected, loc_y_selected] = locations
-        for i in range(len(loc_x_selected)):
-            xy = [int(loc_x_selected[i] / self.rescale_rate),
-                  int(loc_y_selected[i] / self.rescale_rate),
-                  int((loc_x_selected[i] + self.patch_size*level_downsamples[self.extract_layer]) / self.rescale_rate),
-                  int((loc_y_selected[i] + self.patch_size*level_downsamples[self.extract_layer]) / self.rescale_rate)]
-            draw.rectangle(xy, outline='green')
-        # thumbnail.show()
-        print("show thumbnail and grids %d" % len(loc_x_selected))
         if self.log_dir is None:
             print("log dir is None, validation image will not be saved")
+            return
         if not os.path.exists(self.log_dir):
             try:
                 os.makedirs(self.log_dir,  exist_ok=True)
             except OSError:
                 raise Exception("Can't create/access log_dir, unable to save validation image")
         if os.path.exists(self.log_dir):
+            draw = ImageDraw.Draw(thumbnail)
+            [loc_x_selected, loc_y_selected] = locations
+            for i in range(len(loc_x_selected)):
+                xy = [int(loc_x_selected[i] / self.rescale_rate),
+                      int(loc_y_selected[i] / self.rescale_rate),
+                      int((loc_x_selected[i] + self.patch_size * level_downsamples[
+                          self.extract_layer]) / self.rescale_rate),
+                      int((loc_y_selected[i] + self.patch_size * level_downsamples[
+                          self.extract_layer]) / self.rescale_rate)]
+                draw.rectangle(xy, outline='green')
+            # thumbnail.show()
+            print("Grids numbers in total: %d" % len(loc_x_selected))
             thumb_fn = os.path.join(self.log_dir, case_info["fn_str"]+"_extraction_grid_" + str(len(loc_x_selected)) + ".png")
             thumbnail.save(thumb_fn)
 
@@ -499,10 +502,15 @@ if __name__ == "__main__":
 
     wsi_fn = "\\\\mfad\\researchmn\\HCPR\\HCPR-GYNECOLOGICALTUMORMICROENVIRONMENT\\WSIs\\OCMC-016.svs"  # WSI file name
     output_dir = "H:\\OvarianCancer\\ImageData\\Patches\\OCMC-016"
-
+    log_dir = "H:\\OvarianCancer\\ImageData\\Patches\\OCMC-016_log"
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
-    parameters = ExtractorParameters(output_dir, patch_size=500, stride=500, extract_layer=0, patch_filter_by_area=0.3,
-                                     save_format='.jpg', sample_cnt=-1)
+
+    # parameters = ExtractorParameters(output_dir, patch_size=500, stride=500, extract_layer=0, patch_filter_by_area=0.3,
+    #                                  save_format='.jpg', sample_cnt=-1)
+
+    parameters = ExtractorParameters(output_dir, log_dir=log_dir, save_format='.jpg', patch_size=512, stride=512,
+                                     sample_cnt=-1, extract_layer=0, patch_filter_by_area=0.5, patch_rescale_to=256)
+
     patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
     patch_num = patch_extractor.extract(wsi_fn)
     #
