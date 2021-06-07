@@ -8,6 +8,8 @@ import sys
 import concurrent  # python 2.7 don't support this module
 from PIL import Image, ImageDraw
 from scipy import ndimage
+from aicspylibczi import CziFile
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 ch = logging.StreamHandler()
@@ -85,22 +87,31 @@ class PatchExtractor:
         :param wsi_fn: Name of WSI file
         :return: OpenSlideObject, case_description.dict
         """
-        wsi_obj = openslide.open_slide(wsi_fn)
+        root_dir, fn = os.path.split(wsi_fn)
+        uuid, ext = os.path.splitext(fn)
+        if ext.lower() == ".czi":
+            pth = Path(wsi_fn)
+            wsi_obj = CziFile(pth)
+        else:
+            wsi_obj = openslide.open_slide(wsi_fn)
         root_dir, fn = os.path.split(wsi_fn)
         uuid, ext = os.path.splitext(fn)
         case_info = {"fn_str": uuid, "ext": ext, "root_dir": root_dir}  # TODO: get file information from the file name
         return wsi_obj, case_info
 
-    def get_thumbnail(self, wsi_obj):
+    def get_thumbnail(self, wsi_obj, case_info):
         """
         Given an OpenSlideObject, return a down-sampled thumbnail image
         :param wsi_obj: OpenSlideObject
         :return: thumbnail_image
         """
-        wsi_w, wsi_h = wsi_obj.dimensions
-        thumb_size_x = wsi_w / self.rescale_rate
-        thumb_size_y = wsi_h / self.rescale_rate
-        thumbnail = wsi_obj.get_thumbnail([thumb_size_x, thumb_size_y]).convert("RGB")
+        if case_info.get("ext").lower() == ".czi":
+            thumbnail = wsi_obj.read_mosaic(C=0, scale_factor=1/self.rescale_rate)
+        else:
+            wsi_w, wsi_h = wsi_obj.dimensions
+            thumb_size_x = wsi_w / self.rescale_rate
+            thumb_size_y = wsi_h / self.rescale_rate
+            thumbnail = wsi_obj.get_thumbnail([thumb_size_x, thumb_size_y]).convert("RGB")
         return thumbnail
 
     def get_patch_locations(self, wsi_thumb_mask, level_downsamples):
@@ -374,6 +385,10 @@ class PatchExtractor:
         tf_writer.close()
         return patch_cnt
 
+    def save_CZI_patches(self, wsi_obj, case_info, indices):
+
+        return 0
+
     # get image patches and write to files
     def save_patches(self, wsi_obj, case_info, indices):
         """
@@ -389,11 +404,19 @@ class PatchExtractor:
             tf_writer, tf_fn = self.generate_tfRecords_fp(case_info)
         [loc_x, loc_y] = indices
         for idx, lx in enumerate(loc_x):
-            patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
-                                        self.extract_layer,
-                                        (self.patch_size, self.patch_size)
-                                        ).convert("RGB")
+            if case_info.get("ext").lower() == ".czi":
+                bbox = wsi_obj.scene_bounding_box()
+                mosaic_data = wsi_obj.read_mosaic(C=0, region=(bbox[0]+loc_x[idx], bbox[1]+loc_y[idx], self.patch_size, self.patch_size), scale_factor=1.0)
+                img = np.swapaxes(mosaic_data, 0, 1)
+                patch = np.swapaxes(img, 1, 2)
+            else:
+                patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
+                                            self.extract_layer,
+                                            (self.patch_size, self.patch_size)
+                                            ).convert("RGB")
             if self.patch_rescale_to:
+                if isinstance(patch, np.ndarray):
+                    patch = Image.fromarray(patch)
                 patch = patch.resize([self.patch_rescale_to, self.patch_rescale_to])
             # Only print out the patches that contain tissue in them (e.g. Content Rich)
             Content_rich = True
@@ -423,6 +446,7 @@ class PatchExtractor:
                     #     plt.figure(1)
                     #     plt.imshow(patch)
                     #     plt.show()
+                    # TODO: set save file name, so that czi file (TMA) save to different folders
                     fn = self.generate_patch_fn(case_info, (loc_x[idx], loc_y[idx]), label_text=label_txt)
                     if not os.path.exists(os.path.split(fn)[0]):
                         os.makedirs(os.path.split(fn)[0])
@@ -452,18 +476,19 @@ class PatchExtractor:
         """
         _, ext = os.path.splitext(wsi_fn)
         if ext.lower() == ".czi":
-            wsi_obj, case_info = self.get_case_info_CZI(wsi_fn)
-            wsi_thumb = self.get_thumbnail_CZI(wsi_obj)  # get the thumbnail
+            wsi_obj, case_info = self.get_case_info(wsi_fn)
+            wsi_thumb = self.get_thumbnail(wsi_obj, case_info)  # get the thumbnail
             wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
             extract_locations = self.get_patch_locations(wsi_thumb_mask, wsi_obj.level_downsamples)
             self.validate_extract_locations(case_info, extract_locations, wsi_thumb, wsi_obj.level_downsamples)
+            return self.save_CZI_patches(wsi_obj, case_info, extract_locations)
         else:  # suppose other images are able to be processed with OpenSlide package
             wsi_obj, case_info = self.get_case_info(wsi_fn)
             wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
             wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
             extract_locations = self.get_patch_locations(wsi_thumb_mask, wsi_obj.level_downsamples)
             self.validate_extract_locations(case_info, extract_locations, wsi_thumb, wsi_obj.level_downsamples)
-        return self.save_patches(wsi_obj, case_info, extract_locations)
+            return self.save_patches(wsi_obj, case_info, extract_locations)
 
         # if logger.DEBUG == logger.root.level:
         #     import matplotlib.pyplot as plt
