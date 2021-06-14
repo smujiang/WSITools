@@ -182,8 +182,8 @@ class PatchExtractor:
         for region in regionprops(label_image):
             if region.area >= tissue_thumbnail_area_filter:
                 pos_indices = np.where(label_image == region.label)
-                loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
-                loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
+                loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int32)
+                loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int32)
                 loc_x_list = []
                 loc_y_list = []
                 x_lim = [min(loc_x), max(loc_x)]
@@ -487,7 +487,7 @@ class PatchExtractor:
             for TMA_idx, loc_x in enumerate(loc_x_list):
                 loc_y = loc_y_list[TMA_idx]
                 for idx, lx in enumerate(loc_x):
-                    mosaic_data = wsi_obj.read_mosaic(C=0, region=(bbox[0]+loc_x[idx], bbox[1]+loc_y[idx], self.patch_size, self.patch_size), scale_factor=1.0)
+                    mosaic_data = wsi_obj.read_mosaic(C=0, region=(bbox[0]+loc_x[idx], bbox[1]+loc_y[idx], self.patch_size, self.patch_size), scale_factor=1)
                     img = np.swapaxes(mosaic_data, 0, 1)  #TODO: may not necessary in higher version
                     patch = np.swapaxes(img, 1, 2)  #TODO: may not necessary
                     patch = Image.fromarray(patch)
@@ -684,8 +684,8 @@ if __name__ == "__main__":
     # tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
     tissue_detector = TissueDetector("LAB_Threshold", threshold=60)
 
-    parameters = ExtractorParameters(output_dir, log_dir=log_dir, patch_size=500, stride=500, extract_layer=0, patch_filter_by_area=0.3,
-                                     save_format='.jpg', sample_cnt=-1)
+    parameters = ExtractorParameters(output_dir, log_dir=log_dir, patch_size=512, stride=512, extract_layer=0, patch_filter_by_area=0.3,
+                                     patch_rescale_to=256, save_format='.jpg', sample_cnt=-1)
 
     '''
     For example:
