@@ -2,7 +2,7 @@
 Tools for whole slide image (WSI) pre-processing, including tissue detection, patch extraction, annotation parsing etc.
 # Citation
 Use this bibtex to cite this repository:
-
+```
 @misc{Jun Jiang WSITools 2019,
   title={Whole slide image pre-processing tools for deep learning tasks},
   author={Jun Jiang},
@@ -11,6 +11,7 @@ Use this bibtex to cite this repository:
   journal={GitHub repository},
   howpublished={\url{https://github.com/smujiang/WSITools}},
 }
+```
 ## Quick Start
 ### Installation
 ```bash
