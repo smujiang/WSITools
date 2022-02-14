@@ -12,6 +12,11 @@ Use this bibtex to cite this repository:
   howpublished={\url{https://github.com/smujiang/WSITools}},
 }
 ```
+Or cite our paper used this tool
+```
+[1] Jiang, Jun, Burak Tekin, Ruifeng Guo, Hongfang Liu, Yajue Huang, and Chen Wang. "Digital pathology-based study of cell-and tissue-level morphologic features in serous borderline ovarian tumor and high-grade serous ovarian cancer." Journal of Pathology Informatics 12 (2021).
+[2] Jiang, Jun, Naresh Prodduturi, David Chen, Qiangqiang Gu, Thomas Flotte, Qianjin Feng, and Steven Hart. "Image-to-image translation for automatic ink removal in whole slide images." Journal of Medical Imaging 7, no. 5 (2020): 057502.
+```
 ## Quick Start
 ### Installation
 ```bash
