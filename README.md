@@ -14,8 +14,9 @@ Use this bibtex to cite this repository:
 ```
 Or cite our paper used this tool
 ```
-[1] Jiang, Jun, Burak Tekin, Ruifeng Guo, Hongfang Liu, Yajue Huang, and Chen Wang. "Digital pathology-based study of cell-and tissue-level morphologic features in serous borderline ovarian tumor and high-grade serous ovarian cancer." Journal of Pathology Informatics 12 (2021).
-[2] Jiang, Jun, Naresh Prodduturi, David Chen, Qiangqiang Gu, Thomas Flotte, Qianjin Feng, and Steven Hart. "Image-to-image translation for automatic ink removal in whole slide images." Journal of Medical Imaging 7, no. 5 (2020): 057502.
+[1] Jiang, Jun, Burak Tekin, Lin Yuan, Sebastian Armasu, Stacey Winham, E. Goode, Hongfang Liu, Yajue Huang, Ruifeng Guo, and Chen Wang. "Computational tumor stroma reaction evaluation led to novel prognosis-associated fibrosis and molecular signature discoveries in high-grade serous ovarian carcinoma." Frontiers in medicine 9 (2022).
+[2] Jiang, Jun, Burak Tekin, Ruifeng Guo, Hongfang Liu, Yajue Huang, and Chen Wang. "Digital pathology-based study of cell-and tissue-level morphologic features in serous borderline ovarian tumor and high-grade serous ovarian cancer." Journal of Pathology Informatics 12 (2021).
+[3] Jiang, Jun, Naresh Prodduturi, David Chen, Qiangqiang Gu, Thomas Flotte, Qianjin Feng, and Steven Hart. "Image-to-image translation for automatic ink removal in whole slide images." Journal of Medical Imaging 7, no. 5 (2020): 057502.
 ```
 ## Quick Start
 ### Installation
