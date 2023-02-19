@@ -1,6 +1,9 @@
 import struct
 import tifffile
 
+# refer to:
+# https://forum.image.sc/t/anonymize-svs-file/61507/2
+
 fn = "/infodev1/non-phi-data/junjiang/OvaryCancer/WSIs/tobe_deidentified.svs"
 with tifffile.TiffFile(fn, mode='r+b') as svs:
     assert svs.is_svs
