@@ -114,8 +114,8 @@ class PatchExtractor:
 
         wsi_thumb_mask = ndimage.binary_erosion(wsi_thumb_mask)
         pos_indices = np.where(wsi_thumb_mask > 0)
-        loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int)
-        loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int)
+        loc_y = (np.array(pos_indices[0]) * self.rescale_rate).astype(np.int32)
+        loc_x = (np.array(pos_indices[1]) * self.rescale_rate).astype(np.int32)
         loc_x_selected = []
         loc_y_selected = []
         x_lim = [min(loc_x), max(loc_x)]
