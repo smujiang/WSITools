@@ -56,7 +56,7 @@ def main():
 
     parser.add_argument("-f", "--patch-format",
                         dest='save_format',
-                        choices=['.png', '.jpg', '.tfrecord'],
+                        choices=['.png', '.jpg', '.h5', '.tfrecord'],
                         default=".png",
                         help="Output format for patches")
 
