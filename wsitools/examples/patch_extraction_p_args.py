@@ -44,7 +44,7 @@ parser.add_argument("-l", "--openslide-level",
 
 args = parser.parse_args()
 
-wsi_fn_list_csv = "/lus/grand/projects/gpu_hack/mayopath/Jun/script/wsi_list_40x.csv"
+wsi_fn_list_csv = "./wsi_list_40x.csv"
 output_dir = args.out_dir
 log_dir = os.path.join(args.out_dir, "logs")
 patch_size = args.patch_size
@@ -69,7 +69,7 @@ wsi_fn_list = random.choices(wsi_fn_list, k=10)
 
 tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
 
-parameters = ExtractorParameters(output_dir, log_dir=log_dir, patch_size=patch_size, stride=patch_size, extract_layer=0, save_format='.h5', sample_cnt=-1)
+parameters = ExtractorParameters(output_dir, save_format='.h5', log_dir=log_dir, patch_size=patch_size, stride=patch_size, extract_layer=0, save_format='.h5', sample_cnt=-1)
 
 patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
 
