@@ -5,8 +5,15 @@ import csv
 NUM = 10
 root_dir = "/lus/grand/projects/gpu_hack/mayopath/data/TCGA"
 fn_list = glob.glob(root_dir+"/*/*", recursive=True)
-all_wsi_fn_eligible = []
-all_wsi_fn_low_resolution = []
+
+save_to = "./wsi_list_40x.csv"
+fp = open(save_to, 'w')
+wrt_str = ""
+
+save_to_2 = "./wsi_list_others.csv"
+fp2 = open(save_to, 'w')
+wrt_str_2 = ""
+
 for f in fn_list:
     if ".svs" in f or '.tif' in f:
         wsi_obj = openslide.open_slide(f)
@@ -17,16 +24,14 @@ for f in fn_list:
             pixel_size = wsi_prop["openslide.mpp-x"]
             print(pixel_size)
             if float(pixel_size)< 0.27: # 40x
-                all_wsi_fn_eligible.append(f)
+                wrt_str += f + "\n"
             else:
-                all_wsi_fn_low_resolution.append(f)
+                wrt_str_2 += f + "\n"
 
-save_to = "./wsi_list_40x.csv"
-fp = open(save_to, 'w')
-wrt_str = ""
-for fn in all_wsi_fn_eligible:
-    wrt_str += fn + "\n"
+fp2.write(wrt_str_2)
 fp.write(wrt_str)
+fp.close()
+fp2.close()
 
 
 
