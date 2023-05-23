@@ -534,7 +534,7 @@ class PatchExtractor:
             else:
                 patches_cnt = self.save_patches(wsi_obj, case_info, extract_locations)
             fp = open(case_finished_fn, 'w')
-            fp.write("Patch Num: %d " %patch_cnt)
+            fp.write("Patch Num: %d " %patches_cnt)
             fp.close()
         return patches_cnt
 
