@@ -17,6 +17,7 @@ logger.addHandler(ch)
 
 is_cuda_gpu_available = tf.test.is_gpu_available(cuda_only=True)
 is_cuda_gpu_available = False
+
 if is_cuda_gpu_available:
     import cupy
     import cucim  # if GPU and cuda available
@@ -118,7 +119,7 @@ class PatchExtractor:
             #
             # thumb_size_x = wsi_w / self.rescale_rate
             # thumb_size_y = wsi_h / self.rescale_rate
-            thumbnail = cucim.rescale(wsi_obj,  1/self.rescale_rate).convert_colorspace("RGB")
+            thumbnail = cucim.skimage.transform.rescale(wsi_obj,  1/self.rescale_rate).convert_colorspace("RGB")
 
         return thumbnail
 
@@ -188,18 +189,20 @@ class PatchExtractor:
             else:
                 draw = ImageDraw.Draw(thumbnail)
                 [loc_x_selected, loc_y_selected] = locations
-                for i in range(len(loc_x_selected)):
-                    xy = [int(loc_x_selected[i] / self.rescale_rate),
-                          int(loc_y_selected[i] / self.rescale_rate),
-                          int((loc_x_selected[i] + self.patch_size * level_downsamples[
-                              self.extract_layer]) / self.rescale_rate),
-                          int((loc_y_selected[i] + self.patch_size * level_downsamples[
-                              self.extract_layer]) / self.rescale_rate)]
-                    draw.rectangle(xy, outline='green')
-                # thumbnail.show()
-                print("Grids numbers in total: %d" % len(loc_x_selected))
-                thumb_fn = os.path.join(self.log_dir, case_info["fn_str"]+"_extraction_grid_" + str(len(loc_x_selected)) + ".png")
-                thumbnail.save(thumb_fn)
+                thumb_fn = os.path.join(self.log_dir,
+                                        case_info["fn_str"] + "_extraction_grid_" + str(len(loc_x_selected)) + ".png")
+                if not os.path.exists(thumb_fn):
+                    for i in range(len(loc_x_selected)):
+                        xy = [int(loc_x_selected[i] / self.rescale_rate),
+                              int(loc_y_selected[i] / self.rescale_rate),
+                              int((loc_x_selected[i] + self.patch_size * level_downsamples[
+                                  self.extract_layer]) / self.rescale_rate),
+                              int((loc_y_selected[i] + self.patch_size * level_downsamples[
+                                  self.extract_layer]) / self.rescale_rate)]
+                        draw.rectangle(xy, outline='green')
+                    # thumbnail.show()
+                    print("Grids numbers in total: %d" % len(loc_x_selected))
+                    thumbnail.save(thumb_fn)
 
     @staticmethod
     def filter_by_content_area(rgb_image_array, area_threshold=0.4, brightness=85):
@@ -415,7 +418,7 @@ class PatchExtractor:
             hdf5_file_w = h5py.File(fn, mode='w')
             key_shape = [total_patch_num, 3, self.patch_size, self.patch_size]
             img_storage = hdf5_file_w.create_dataset(name='image', shape=key_shape, dtype=np.uint8,
-                                                     chunks=(1, 3, self.patch_size, self.patch_size))
+                                                     chunks=(1, 3, self.patch_size, self.patch_size), compression='gzip')
 
             for idx, lx in enumerate(loc_x):
                 patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
@@ -514,10 +517,10 @@ class PatchExtractor:
         :return: Number of patches written
         """
         wsi_obj, case_info = self.get_case_info(wsi_fn)
-
-        case_finished_fn = os.path.join(self.save_dir, 'case_finished.txt')
+        wsi_fn_short = os.path.split(wsi_fn)[1]
+        case_finished_fn = os.path.join(self.save_dir, '%s_case_finished.txt' %wsi_fn_short)
         if os.path.exists(case_finished_fn):
-            print("Patch already extracted: %s" %wsi_fn)
+            print("Patch already extracted: %s" %wsi_fn_short)
             fp = open(case_finished_fn, 'w')
             line = fp.readlines()[0]
             patches_cnt = int(line.split(":")[1].strip())
