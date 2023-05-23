@@ -44,7 +44,7 @@ parser.add_argument("-l", "--openslide-level",
 
 args = parser.parse_args()
 
-wsi_fn_list_csv = "/"
+wsi_fn_list_csv = "/lus/grand/projects/gpu_hack/mayopath/Jun/script/wsi_list_40x.csv"
 output_dir = args.out_dir
 log_dir = os.path.join(args.out_dir, "logs")
 patch_size = args.patch_size
@@ -56,7 +56,7 @@ rescale_rate = args.rescale_rate
 
 
 fp = open(wsi_fn_list_csv, 'r')
-wsi_fn_list = [i for i in csv.reader(fp)]
+wsi_fn_list = [i.strip() for i in fp.readlines()]
 wsi_fn_list = random.choices(wsi_fn_list, k=10)
 
 # wsi_fn_list = [os.path.join("/infodev1/non-phi-data/junjiang/OvaryCancer/WSIs", "OCMC-{:03d}.svs".format(i)) for i in range(1, 31)]
