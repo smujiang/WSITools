@@ -22,9 +22,11 @@ for f in fn_list:
                 all_wsi_fn_low_resolution.append(f)
 
 save_to = "./wsi_list_40x.csv"
-f = open(save_to, 'w')
-write = csv.writer(f)
-write.writerows(all_wsi_fn_eligible)
+fp = open(save_to, 'w')
+wrt_str = ""
+for fn in all_wsi_fn_eligible:
+    wrt_str += fn + "\n"
+fp.write(wrt_str)
 
 
 
