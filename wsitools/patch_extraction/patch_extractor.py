@@ -119,7 +119,7 @@ class PatchExtractor:
             #
             # thumb_size_x = wsi_w / self.rescale_rate
             # thumb_size_y = wsi_h / self.rescale_rate
-            thumbnail = cucim.skimage.transform.rescale(wsi_obj,  1/self.rescale_rate).convert_colorspace("RGB")
+            thumbnail = cucim.skimage.transform.rescale(wsi_obj, 1 / self.rescale_rate).convert_colorspace("RGB")
 
         return thumbnail
 
@@ -140,12 +140,12 @@ class PatchExtractor:
         loc_y_selected = []
         x_lim = [min(loc_x), max(loc_x)]
         y_lim = [min(loc_y), max(loc_y)]
-        for x in range(x_lim[0], x_lim[1], int(self.stride*level_downsamples[self.extract_layer])):
-            for y in range(y_lim[0], y_lim[1], int(self.stride*level_downsamples[self.extract_layer])):
+        for x in range(x_lim[0], x_lim[1], int(self.stride * level_downsamples[self.extract_layer])):
+            for y in range(y_lim[0], y_lim[1], int(self.stride * level_downsamples[self.extract_layer])):
                 x_idx = int(x / self.rescale_rate)
                 y_idx = int(y / self.rescale_rate)
-                x_idx_1 = int((x+self.patch_size * level_downsamples[self.extract_layer]) / self.rescale_rate)
-                y_idx_1 = int((y+self.patch_size * level_downsamples[self.extract_layer]) / self.rescale_rate)
+                x_idx_1 = int((x + self.patch_size * level_downsamples[self.extract_layer]) / self.rescale_rate)
+                y_idx_1 = int((y + self.patch_size * level_downsamples[self.extract_layer]) / self.rescale_rate)
                 if x_idx_1 >= wsi_thumb_mask.shape[1]:
                     x_idx_1 = x_idx
                 if y_idx_1 >= wsi_thumb_mask.shape[0]:
@@ -166,8 +166,8 @@ class PatchExtractor:
         for roi in ROIs:
             x_lim = [roi[0], roi[2]]
             y_lim = [roi[1], roi[3]]
-            for x in range(x_lim[0], x_lim[1], int(self.stride*level_downsamples[self.extract_layer])):
-                for y in range(y_lim[0], y_lim[1], int(self.stride*level_downsamples[self.extract_layer])):
+            for x in range(x_lim[0], x_lim[1], int(self.stride * level_downsamples[self.extract_layer])):
+                for y in range(y_lim[0], y_lim[1], int(self.stride * level_downsamples[self.extract_layer])):
                     loc_x_selected.append(int(x))
                     loc_y_selected.append(int(y))
         return [loc_x_selected, loc_y_selected]
@@ -183,7 +183,7 @@ class PatchExtractor:
         else:
             if not os.path.exists(self.log_dir):
                 try:
-                    os.makedirs(self.log_dir,  exist_ok=True)
+                    os.makedirs(self.log_dir, exist_ok=True)
                 except OSError:
                     raise Exception("Can't create/access log_dir, unable to save validation image")
             else:
@@ -350,7 +350,7 @@ class PatchExtractor:
         :return: Number of patches written
         """
 
-        patch_cnt = 0 # count how many patches extracted
+        patch_cnt = 0  # count how many patches extracted
         if self.with_feature_map:
             tf_writer, tf_fn = self.generate_tfRecords_fp(case_info)
         [loc_x, loc_y] = indices
@@ -418,7 +418,8 @@ class PatchExtractor:
             hdf5_file_w = h5py.File(fn, mode='w')
             key_shape = [total_patch_num, 3, self.patch_size, self.patch_size]
             img_storage = hdf5_file_w.create_dataset(name='image', shape=key_shape, dtype=np.uint8,
-                                                     chunks=(1, 3, self.patch_size, self.patch_size), compression='gzip')
+                                                     chunks=(1, 3, self.patch_size, self.patch_size),
+                                                     compression='gzip')
 
             for idx, lx in enumerate(loc_x):
                 patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
@@ -449,7 +450,7 @@ class PatchExtractor:
         :param indices: tuple of (x, y) locations for where the patch will come from
         :return: Number of patches written
         """
-        patch_cnt = 0 # count how many patches extracted
+        patch_cnt = 0  # count how many patches extracted
         if self.with_feature_map:
             tf_writer, tf_fn = self.generate_tfRecords_fp(case_info)
         [loc_x, loc_y] = indices
@@ -518,12 +519,16 @@ class PatchExtractor:
         """
         wsi_obj, case_info = self.get_case_info(wsi_fn)
         wsi_fn_short = os.path.split(wsi_fn)[1]
-        case_finished_fn = os.path.join(self.save_dir, '%s_case_finished.txt' %wsi_fn_short)
+        case_finished_fn = os.path.join(self.save_dir, '%s_case_finished.txt' % wsi_fn_short)
         if os.path.exists(case_finished_fn):
-            print("Patch already extracted: %s" %wsi_fn_short)
-            fp = open(case_finished_fn, 'w')
-            line = fp.readlines()[0]
-            patches_cnt = int(line.split(":")[1].strip())
+            print("Patch already extracted: %s" % wsi_fn_short)
+            try:
+                fp = open(case_finished_fn, 'w')
+                line = fp.readlines()[0]
+                patches_cnt = int(line.split(":")[1].strip())
+            except:
+                patches_cnt = 0
+                
         else:
             wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
             wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
@@ -534,7 +539,7 @@ class PatchExtractor:
             else:
                 patches_cnt = self.save_patches(wsi_obj, case_info, extract_locations)
             fp = open(case_finished_fn, 'w')
-            fp.write("Patch Num: %d " %patches_cnt)
+            fp.write("Patch Num: %d " % patches_cnt)
             fp.close()
         return patches_cnt
 
@@ -590,10 +595,10 @@ if __name__ == "__main__":
     output_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/h5_files"
     log_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/logs"
 
-
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
 
-    parameters = ExtractorParameters(output_dir, log_dir=log_dir, patch_size=500, stride=500, extract_layer=0, save_format='.h5', sample_cnt=-1)
+    parameters = ExtractorParameters(output_dir, log_dir=log_dir, patch_size=500, stride=500, extract_layer=0,
+                                     save_format='.h5', sample_cnt=-1)
     # save_dir=None, log_dir="./", save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None, \
     #                  with_anno=True, threads=20, rescale_rate=128, patch_size=128, stride=128, patch_rescale_to=None,
     #                  extract_layer=0
