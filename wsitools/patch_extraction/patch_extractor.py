@@ -528,7 +528,7 @@ class PatchExtractor:
                 patches_cnt = int(line.split(":")[1].strip())
             except:
                 patches_cnt = 0
-                
+
         else:
             wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
             wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask

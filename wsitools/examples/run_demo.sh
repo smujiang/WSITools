@@ -28,9 +28,6 @@ python -m cProfile -o $output_root/512_16/512_16.stats patch_extraction_p_args.p
 mkdir $output_root/512_32
 python -m cProfile -o $output_root/512_32/512_32.stats patch_extraction_p_args.py -s 512 -o $output_root/512_32 -n 32 >> $output_root/log_512_32.txt
 
-mkdir $output_root/512_128
-python -m cProfile -o $output_root/512_128/512_128.stats patch_extraction_p_args.py -s 512 -o $output_root/512_128 -n 128 >> $output_root/log_512_128.txt
-
 
 
 ################################
