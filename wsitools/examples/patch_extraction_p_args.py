@@ -56,8 +56,16 @@ rescale_rate = args.rescale_rate
 
 
 fp = open(wsi_fn_list_csv, 'r')
-wsi_fn_list = [i.strip() for i in fp.readlines()]
-wsi_fn_list = random.choices(wsi_fn_list, k=10)
+
+wsi_fn_list = []
+
+for idx, i in enumerate(fp.readlines()):
+    wsi_fn_list.append(i.strip())
+    if idx == 10:
+        break
+
+# wsi_fn_list = [i.strip() for i in fp.readlines()]
+# wsi_fn_list = random.choices(wsi_fn_list, k=10)
 
 # wsi_fn_list = [os.path.join("/infodev1/non-phi-data/junjiang/OvaryCancer/WSIs", "OCMC-{:03d}.svs".format(i)) for i in range(1, 31)]
 #
