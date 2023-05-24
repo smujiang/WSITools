@@ -72,7 +72,8 @@ tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
 parameters = ExtractorParameters(output_dir, log_dir=log_dir, patch_size=patch_size, stride=patch_size, extract_layer=0, save_format='.h5', sample_cnt=-1)
 
 patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
-patch_extractor.extract(wsi_fn_list)
+for wsi_fn in wsi_fn_list:
+    patch_extractor.extract(wsi_fn)
 
 
 
