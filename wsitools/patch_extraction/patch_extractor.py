@@ -535,8 +535,12 @@ class PatchExtractor:
         else:
             wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail
             wsi_thumb_mask = self.tissue_detector.predict(wsi_thumb)  # get the foreground thumbnail mask
-            extract_locations = self.get_patch_locations(wsi_thumb_mask, wsi_obj.level_downsamples)
-            self.validate_extract_locations(case_info, extract_locations, wsi_thumb, wsi_obj.level_downsamples)
+            if is_cuda_gpu_available:
+                level_downsamples = wsi_obj.resolutions['level_downsamples']
+            else:
+                level_downsamples = wsi_obj.level_downsamples
+            extract_locations = self.get_patch_locations(wsi_thumb_mask, level_downsamples)
+            self.validate_extract_locations(case_info, extract_locations, wsi_thumb, level_downsamples)
             if self.save_format == '.h5':
                 patches_cnt = self.save_patches_h5file(wsi_obj, case_info, extract_locations)
             else:
@@ -565,9 +569,13 @@ class PatchExtractor:
         :return:
         '''
         wsi_obj, case_info = self.get_case_info(wsi_fn)
-        extract_locations = self.get_patch_locations_from_ROIs(ROIs, wsi_obj.level_downsamples)
+        if is_cuda_gpu_available:
+            level_downsamples = wsi_obj.resolutions['level_downsamples']
+        else:
+            level_downsamples = wsi_obj.level_downsamples
+        extract_locations = self.get_patch_locations_from_ROIs(ROIs, level_downsamples)
         wsi_thumb = self.get_thumbnail(wsi_obj)  # get the thumbnail for validation
-        self.validate_extract_locations(case_info, extract_locations, wsi_thumb, wsi_obj.level_downsamples)
+        self.validate_extract_locations(case_info, extract_locations, wsi_thumb, level_downsamples)
         return self.save_patches(wsi_obj, case_info, extract_locations)
 
 
