@@ -61,7 +61,7 @@ wsi_fn_list = []
 
 for idx, i in enumerate(fp.readlines()):
     wsi_fn_list.append(i.strip())
-    if idx == 10:
+    if idx == 128:
         break
 
 # wsi_fn_list = [i.strip() for i in fp.readlines()]
