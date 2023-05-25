@@ -402,7 +402,7 @@ class PatchExtractor:
 
     def save_patches_h5file(self, wsi_obj, case_info, indices):
         """
-        Saves images (and their labels) in either JPEG, PNG, or TFRecord format and returns the number of patches it saved
+        Saves images (and their labels) in .h5 format and returns the number of patches it saved
 
         :param wsi_obj: OpenSlideObject
         :param case_info: likely a UUID or sample name
@@ -425,16 +425,25 @@ class PatchExtractor:
                                                      compression='gzip')
 
             for idx, lx in enumerate(loc_x):
-                patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
-                                            self.extract_layer,
-                                            (self.patch_size, self.patch_size)
-                                            ).convert("RGB")
-                if self.patch_rescale_to:
-                    patch = patch.resize([self.patch_rescale_to, self.patch_rescale_to])
+                if is_cuda_gpu_available:
+                    cucim_patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
+                                                      (self.patch_size, self.patch_size),
+                                                      self.extract_layer, num_workers=16)
+                    if self.patch_rescale_to:
+                        cucim_patch = cucim.skimage.transform.resize(cucim_patch, [self.patch_rescale_to, self.patch_rescale_to, 3], preserve_range=True)
+                    img_arr = cupy.asarray(cucim_patch).get()
+                else:
 
-                patch_cnt += 1
-                img_arr = np.array(patch)[:, :, 0:3].astype(np.uint8).transpose(2, 0, 1)
+                    patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
+                                                self.extract_layer,
+                                                (self.patch_size, self.patch_size)
+                                                ).convert("RGB")
+                    if self.patch_rescale_to:
+                        patch = patch.resize([self.patch_rescale_to, self.patch_rescale_to])
+                    img_arr = np.array(patch)[:, :, 0:3].astype(np.uint8).transpose(2, 0, 1)
+
                 img_storage[idx] = img_arr
+                patch_cnt += 1
                 #  # Serialize to string and write on the file
                 logger.info('\rWrote {} to h5 file '.format(patch_cnt))
                 sys.stdout.flush()
