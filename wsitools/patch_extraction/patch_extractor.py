@@ -15,6 +15,7 @@ formatter = logging.Formatter('\x1b[80D\x1b[1A\x1b[K%(message)s')
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+device_list = tf.config.list_physical_devices('GPU')
 is_cuda_gpu_available = tf.test.is_gpu_available(cuda_only=True)
 
 if is_cuda_gpu_available:
@@ -431,7 +432,7 @@ class PatchExtractor:
                                                       self.extract_layer, num_workers=16)
                     if self.patch_rescale_to:
                         cucim_patch = cucim.skimage.transform.resize(cucim_patch, [self.patch_rescale_to, self.patch_rescale_to, 3], preserve_range=True)
-                    img_arr = cupy.asarray(cucim_patch).get()
+                    img_arr = cupy.asarray(cucim_patch).transpose(2, 0, 1).get()
                 else:
 
                     patch = wsi_obj.read_region((loc_x[idx], loc_y[idx]),
