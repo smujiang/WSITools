@@ -16,7 +16,6 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 is_cuda_gpu_available = tf.test.is_gpu_available(cuda_only=True)
-is_cuda_gpu_available = False
 
 if is_cuda_gpu_available:
     import cupy
