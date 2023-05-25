@@ -116,16 +116,14 @@ class PatchExtractor:
         else:
             whole_img = wsi_obj.read_region((0, 0), size=(wsi_obj.shape[1], wsi_obj.shape[0]), num_workers=6)
             whole_img_cupy_arr = cupy.asarray(whole_img, dtype='uint8')
-            #thumbnail_cupy = cucim.skimage.transform.rescale(whole_img_cupy_arr, (1/self.rescale_rate, 1/self.rescale_rate, 1), preserve_range=True).astype('uint8')
-            thumbnail_cupy = cucim.skimage.transform.rescale(whole_img_cupy_arr, (1/128, 1/128, 1), preserve_range=True).astype('uint8')
+            thumbnail_cupy = cucim.skimage.transform.rescale(whole_img_cupy_arr, (1/self.rescale_rate, 1/self.rescale_rate, 1), preserve_range=True).astype('uint8')
+            # thumbnail_cupy = cucim.skimage.transform.rescale(whole_img_cupy_arr, (1/128, 1/128, 1), preserve_range=True).astype('uint8')
             thumbnail = Image.fromarray(thumbnail_cupy.get())
 
             # thumbnail = Image.fromarray(cucim.skimage.transform.rescale(
             #     cupy.asarray(wsi_obj.read_region((0, 0), size=(wsi_obj.shape[1], wsi_obj.shape[0]), num_workers=6), dtype='uint8'),
             #     (1 / self.rescale_rate, 1 / self.rescale_rate, 1),
             #     preserve_range=True).astype('uint8').get())
-
-
         return thumbnail
 
     def get_patch_locations(self, wsi_thumb_mask, level_downsamples):
@@ -596,9 +594,13 @@ if __name__ == "__main__":
     # log_dir = "H:\\OvarianCancer\\ImageData\\Patches\\OCMC-016_log"
     #
 
-    wsi_fn = "/infodev1/non-phi-data/junjiang/OvaryCancer/WSIs/OCMC-016.svs"  # WSI file name
-    output_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/h5_files"
-    log_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/logs"
+    # wsi_fn = "/infodev1/non-phi-data/junjiang/OvaryCancer/WSIs/OCMC-016.svs"  # WSI file name
+    # output_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/h5_files"
+    # log_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/logs"
+
+    wsi_fn = "/lus/grand/projects/gpu_hack/mayopath/data/TCGA/84535015-93db-4323-9d19-2a5c7f09baaf/TCGA-04-1655-01A-01-BS1.55f36120-46fb-4c88-b137-81798b011a9f.svs"
+    output_dir = "/lus/grand/projects/gpu_hack/mayopath/Jun/data/test"
+    log_dir = "/lus/grand/projects/gpu_hack/mayopath/Jun/data/test/log"
 
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
 
