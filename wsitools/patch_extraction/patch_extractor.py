@@ -616,7 +616,7 @@ if __name__ == "__main__":
     # output_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/h5_files"
     # log_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/logs"
 
-    wsi_fn = "/lus/grand/projects/gpu_hack/mayopath/data/TCGA/84535015-93db-4323-9d19-2a5c7f09baaf/TCGA-04-1655-01A-01-BS1.55f36120-46fb-4c88-b137-81798b011a9f.svs"
+    wsi_fn = "/lus/grand/projects/gpu_hack/mayopath/data/TCGA/b5b131de-299e-4ecd-a0e5-5223ad101929/TCGA-DJ-A3UZ-01Z-00-DX1.5F80B690-1CF1-49FF-93D0-8C0E9A532C2C.svs"
     output_dir = "/lus/grand/projects/gpu_hack/mayopath/Jun/data/test"
     log_dir = "/lus/grand/projects/gpu_hack/mayopath/Jun/data/test/log"
 
