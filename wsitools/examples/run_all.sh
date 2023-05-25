@@ -6,7 +6,7 @@ output_root=/lus/grand/projects/gpu_hack/mayopath/Jun/data
 
 for size in 256 384 512 1024 2048
 do
-  for n_p in 8 16 32 64 128
+  for n_p in 32 64 128
   do
     mkdir $output_root/"$size"_"$n_p"
     python -m cProfile -o $output_root/"$size"_"$n_p"/"$size"_"$n_p".stats patch_extraction_p_args.py -s $size -o $output_root/"$size"_"$n_p" -n $n_p >> $output_root/log_"$size"_"$n_p".txt
