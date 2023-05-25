@@ -118,6 +118,9 @@ class PatchExtractor:
             #
             # thumb_size_x = wsi_w / self.rescale_rate
             # thumb_size_y = wsi_h / self.rescale_rate
+            import cupy as cp
+            from cucim.skimage.measure import block_reduce
+            thum = block_reduce(wsi_obj, block_size=(self.rescale_rate, self.rescale_rate, 1), func=cp.mean)
             thumbnail = cucim.skimage.transform.rescale(wsi_obj, 1 / self.rescale_rate).convert_colorspace("RGB")
 
         return thumbnail
