@@ -616,9 +616,19 @@ if __name__ == "__main__":
     # output_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/h5_files"
     # log_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/logs"
 
-    wsi_fn = "/lus/grand/projects/gpu_hack/mayopath/data/TCGA/b5b131de-299e-4ecd-a0e5-5223ad101929/TCGA-DJ-A3UZ-01Z-00-DX1.5F80B690-1CF1-49FF-93D0-8C0E9A532C2C.svs"
+    # wsi_fn = "/lus/grand/projects/gpu_hack/mayopath/data/TCGA/b5b131de-299e-4ecd-a0e5-5223ad101929/TCGA-DJ-A3UZ-01Z-00-DX1.5F80B690-1CF1-49FF-93D0-8C0E9A532C2C.svs"
     output_dir = "/lus/grand/projects/gpu_hack/mayopath/Jun/data/test"
     log_dir = "/lus/grand/projects/gpu_hack/mayopath/Jun/data/test/log"
+
+    wsi_fn_list_csv = "./wsi_list_40x.csv"
+    fp = open(wsi_fn_list_csv, 'r')
+
+    wsi_fn_list = []
+    for idx, i in enumerate(fp.readlines()):
+        wsi_fn_list.append(i.strip())
+        if idx == 8:
+            break
+
 
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
 
@@ -634,11 +644,12 @@ if __name__ == "__main__":
     In our package, we can call the function like below:
     parameters = ExtractorParameters(output_dir, log_dir=log_dir, save_format='.jpg', patch_size=1024, stride=1024, sample_cnt=-1, extract_layer=0, patch_rescale_to=512)
     '''
-
     patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
-    patch_num = patch_extractor.extract(wsi_fn)
+
+    for wsi_fn in wsi_fn_list:
+        patch_num = patch_extractor.extract(wsi_fn)
     #
     # ROIs = [[35000, 35000, 43000, 43000], [12000, 19000, 25000, 30000]]  # coordinates are from level 0
     # patch_extractor.extract_ROIs(wsi_fn, ROIs)
 
-    print("%d Patches have been save to %s" % (patch_num, output_dir))
+        print("%d Patches have been save to %s" % (patch_num, output_dir))
