@@ -14,13 +14,13 @@ parser.add_argument("-o", "--out-dir",
                     help="Where patches should be saved")
 
 parser.add_argument("-s", "--patch-size",
-                    default=256,
+                    default=512,
                     dest='patch_size',
                     type=int,
                     help="H & W of patches")
 
 parser.add_argument("-n", "--number-processors",
-                    default=8,
+                    default=64,
                     dest='num_processors',
                     type=int,
                     help="Number of processors to use during patch extraction")
@@ -61,7 +61,7 @@ wsi_fn_list = []
 
 for idx, i in enumerate(fp.readlines()):
     wsi_fn_list.append(i.strip())
-    if idx == 256:
+    if idx == 10:
         break
 
 # wsi_fn_list = [i.strip() for i in fp.readlines()]

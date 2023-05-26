@@ -20,5 +20,5 @@ nsys profile -w true \
 	--cudabacktrace=true \
 	-x true \
 	-o $PROFILE_OUT \
-python -m patch_extractor
+python -m patch_extraction_p_args
 	)
