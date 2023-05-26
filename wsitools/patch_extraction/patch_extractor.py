@@ -115,16 +115,16 @@ class PatchExtractor:
             thumb_size_y = wsi_h / self.rescale_rate
             thumbnail = wsi_obj.get_thumbnail([thumb_size_x, thumb_size_y]).convert("RGB")
         else:
-            whole_img = wsi_obj.read_region((0, 0), size=(wsi_obj.shape[1], wsi_obj.shape[0]), num_workers=6)
-            whole_img_cupy_arr = cupy.asarray(whole_img, dtype='uint8')
-            thumbnail_cupy = cucim.skimage.transform.rescale(whole_img_cupy_arr, (1/self.rescale_rate, 1/self.rescale_rate, 1), preserve_range=True).astype('uint8')
+            # whole_img = wsi_obj.read_region((0, 0), size=(wsi_obj.shape[1], wsi_obj.shape[0]), num_workers=6)
+            # whole_img_cupy_arr = cupy.asarray(whole_img, dtype='uint8')
+            # thumbnail_cupy = cucim.skimage.transform.rescale(whole_img_cupy_arr, (1/self.rescale_rate, 1/self.rescale_rate, 1), preserve_range=True).astype('uint8')
             # thumbnail_cupy = cucim.skimage.transform.rescale(whole_img_cupy_arr, (1/128, 1/128, 1), preserve_range=True).astype('uint8')
-            thumbnail = Image.fromarray(thumbnail_cupy.get())
+            # thumbnail = Image.fromarray(thumbnail_cupy.get())
 
-            # thumbnail = Image.fromarray(cucim.skimage.transform.rescale(
-            #     cupy.asarray(wsi_obj.read_region((0, 0), size=(wsi_obj.shape[1], wsi_obj.shape[0]), num_workers=6), dtype='uint8'),
-            #     (1 / self.rescale_rate, 1 / self.rescale_rate, 1),
-            #     preserve_range=True).astype('uint8').get())
+            thumbnail = Image.fromarray(cucim.skimage.transform.rescale(
+                cupy.asarray(wsi_obj.read_region((0, 0), size=(wsi_obj.shape[1], wsi_obj.shape[0]), num_workers=6), dtype='uint8'),
+                (1 / self.rescale_rate, 1 / self.rescale_rate, 1),
+                preserve_range=True).astype('uint8').get())
         return thumbnail
 
     def get_patch_locations(self, wsi_thumb_mask, level_downsamples):
