@@ -130,8 +130,12 @@ class PatchExtractor:
             thumb_size_x = wsi_w / self.rescale_rate
             thumb_size_y = wsi_h / self.rescale_rate
 
-            thumbnail = Image.fromarray(cucim.skimage.transform.resize(cupy.asarray(wsi_obj.read_region((0, 0), size=(wsi_w, wsi_h), num_workers=6), dtype='uint8'), [thumb_size_x, thumb_size_y, 3],
-                                           preserve_range=True).get())
+            wsi_numpy = cupy.asarray(wsi_obj.read_region((0, 0), size=(wsi_w, wsi_h), num_workers=6), dtype='uint8').get()
+            thumbnail = Image.fromarray(wsi_numpy[:self.rescale_rate:, :self.rescale_rate:, :])
+
+
+            # thumbnail = Image.fromarray(cucim.skimage.transform.resize(cupy.asarray(wsi_obj.read_region((0, 0), size=(wsi_w, wsi_h), num_workers=6), dtype='uint8'), [thumb_size_x, thumb_size_y, 3],
+            #                                preserve_range=True).get())
 
         return thumbnail
 
