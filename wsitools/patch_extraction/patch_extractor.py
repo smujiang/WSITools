@@ -17,7 +17,7 @@ logger.addHandler(ch)
 
 device_list = tf.config.list_physical_devices('GPU')
 is_cuda_gpu_available = tf.test.is_gpu_available(cuda_only=True)
-
+is_cuda_gpu_available = False
 if is_cuda_gpu_available:
     import cupy
     import cucim  # if GPU and cuda available
@@ -434,7 +434,7 @@ class PatchExtractor:
             hdf5_file_w = h5py.File(fn, mode='w')
             key_shape = [total_patch_num, 3, self.patch_size, self.patch_size]
             img_storage = hdf5_file_w.create_dataset(name='image', shape=key_shape, dtype=np.uint8,
-                                                     chunks=(1, 3, self.patch_size, self.patch_size),
+                                                     chunks=(1, 3, self.patch_rescale_to, self.patch_rescale_to),
                                                      compression='gzip')
 
             for idx, lx in enumerate(loc_x):
