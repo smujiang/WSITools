@@ -429,13 +429,24 @@ class PatchExtractor:
         else:
             [loc_x, loc_y] = indices
             total_patch_num = len(loc_x)
+            tmp = case_info["fn_str"] + "_loc" + self.save_format
+            loc_fn = os.path.join(self.save_dir, tmp)
+            loc_hdf5_file_w = h5py.File(loc_fn, mode='w')
+            loc_hdf5_file_w.create_dataset(name='location', shape=[total_patch_num, 2], dtype=int, data=indices)
+            loc_hdf5_file_w.close()
+
             tmp = case_info["fn_str"] + self.save_format
             fn = os.path.join(self.save_dir, tmp)
             hdf5_file_w = h5py.File(fn, mode='w')
-            key_shape = [total_patch_num, 3, self.patch_size, self.patch_size]
+            if self.patch_rescale_to:
+                key_shape = [total_patch_num, 3, self.patch_rescale_to, self.patch_rescale_to]
+            else:
+                key_shape = [total_patch_num, 3, self.patch_size, self.patch_size]
             img_storage = hdf5_file_w.create_dataset(name='image', shape=key_shape, dtype=np.uint8,
-                                                     chunks=(1, 3, self.patch_rescale_to, self.patch_rescale_to),
+                                                     chunks=(1, 3, key_shape[2], key_shape[3]),
                                                      compression='gzip')
+
+
 
             for idx, lx in enumerate(loc_x):
                 if is_cuda_gpu_available:
@@ -628,18 +639,18 @@ if __name__ == "__main__":
     # output_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/h5_files"
     # log_dir = "/infodev1/non-phi-data/junjiang/OvaryCancer/Patches/logs"
 
-    # wsi_fn = "/lus/grand/projects/gpu_hack/mayopath/data/TCGA/b5b131de-299e-4ecd-a0e5-5223ad101929/TCGA-DJ-A3UZ-01Z-00-DX1.5F80B690-1CF1-49FF-93D0-8C0E9A532C2C.svs"
+    wsi_fn = "/lus/grand/projects/gpu_hack/mayopath/data/TCGA/b5b131de-299e-4ecd-a0e5-5223ad101929/TCGA-DJ-A3UZ-01Z-00-DX1.5F80B690-1CF1-49FF-93D0-8C0E9A532C2C.svs"
     output_dir = "/lus/grand/projects/gpu_hack/mayopath/Jun/data/test"
     log_dir = "/lus/grand/projects/gpu_hack/mayopath/Jun/data/test/log"
 
-    wsi_fn_list_csv = "./wsi_list_40x.csv"
-    fp = open(wsi_fn_list_csv, 'r')
-
-    wsi_fn_list = []
-    for idx, i in enumerate(fp.readlines()):
-        wsi_fn_list.append(i.strip())
-        if idx == 8:
-            break
+    # wsi_fn_list_csv = "./wsi_list_40x.csv"
+    # fp = open(wsi_fn_list_csv, 'r')
+    #
+    # wsi_fn_list = []
+    # for idx, i in enumerate(fp.readlines()):
+    #     wsi_fn_list.append(i.strip())
+    #     if idx == 8:
+    #         break
 
 
     tissue_detector = TissueDetector("LAB_Threshold", threshold=85)  #
@@ -657,11 +668,12 @@ if __name__ == "__main__":
     parameters = ExtractorParameters(output_dir, log_dir=log_dir, save_format='.jpg', patch_size=1024, stride=1024, sample_cnt=-1, extract_layer=0, patch_rescale_to=512)
     '''
     patch_extractor = PatchExtractor(tissue_detector, parameters=parameters)
+    patch_num = patch_extractor.extract(wsi_fn)
 
-    for wsi_fn in wsi_fn_list:
-        patch_num = patch_extractor.extract(wsi_fn)
-    #
+    # for wsi_fn in wsi_fn_list:
+    #     patch_num = patch_extractor.extract(wsi_fn)
+    # #
     # ROIs = [[35000, 35000, 43000, 43000], [12000, 19000, 25000, 30000]]  # coordinates are from level 0
     # patch_extractor.extract_ROIs(wsi_fn, ROIs)
 
-        print("%d Patches have been save to %s" % (patch_num, output_dir))
+    print("%d Patches have been save to %s" % (patch_num, output_dir))
