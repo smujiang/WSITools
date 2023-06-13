@@ -1,7 +1,8 @@
 # Patch Extraction
 This module aims at extracting patches from whole slide images, and save the export patches into jpg/png/tfrecord files, depends on your parameter settings.   
 
-To start patch extraction, first, you need to [define a tissue detector](../tissue_detection/tissue_detector.md) to identify the foreground of a WSI, because we don't want to wast our time on blank patches. Then, you need to specify some parameters to customise your extraction, anyhow you may use the default parameters. All the parameters are warped in ```ExtractorParameters``` of [patch_extractor.py](../../wsitools/patch_extraction/patch_extractor.py). Read the comments in the file to get more details. 
+To start patch extraction, first, you need to [define a tissue detector](../tissue_detection/tissue_detector.md) to identify the foreground of a WSI, because we don't want to wast our time on blank patches. Then, you need to specify some parameters to customise your extraction, anyhow you may use the default parameters. All the parameters are warped in ```ExtractorParameters``` of [patch_extractor.py](../../wsitools/patch_extraction/patch_extractor.py). Read the comments in the file to get more details. The code will generate a thumbnail of the whole slide image with grids on it showing where the image patches were extracted from. Here is an example:
+![Patch_locations](../imgs/OCMC-004_extraction_grid.png)
 
 ## Extract patches from a single WSI, save to JPEG files
 To extract patches from a single WSI, you can write your code like below.    
