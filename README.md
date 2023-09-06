@@ -73,10 +73,11 @@ patch_extractor = PatchExtractor(tissue_detector,
     annotations = None                        # Object of Annotation Class (see other note below)
     )
 
-# Run the extraction process
-multiprocessing.set_start_method('spawn')
-pool = multiprocessing.Pool(processes = num_processors)
-pool.map(patch_extractor.extract, [wsi_fn])
+if __name__ == '__main__':
+    # Run the extraction process
+    multiprocessing.set_start_method('spawn')
+    pool = multiprocessing.Pool(processes = num_processors)
+    pool.map(patch_extractor.extract, [wsi_fn])
 
 ```
 > See [Feature Maps](docs/patch_extraction/feature_map.md) for more detail
