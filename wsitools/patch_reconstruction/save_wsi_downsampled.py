@@ -39,7 +39,7 @@ class SubPatches2BigTiff:
         w, h, self.x_min, self.y_min = self.calculate_tiff_w_h()
         self.down_scale = down_scale
         print("Image W:%d/H:%d" % (int(w/self.down_scale), int(h/self.down_scale)))
-        self.filter = hann_2d_win((int(self.patch_size/self.down_scale), int(self.patch_size/self.down_scale))
+        self.filter = hann_2d_win((int(self.patch_size[0]/self.down_scale), int(self.patch_size[1]/self.down_scale))
         self.out_arr = (np.zeros((int(h/self.down_scale), int(w/self.down_scale), 3))+255).astype(np.uint8)
         # TODO: save mode = "ABA" or "ABB" or "single"
         # TODO: if list else if directory
