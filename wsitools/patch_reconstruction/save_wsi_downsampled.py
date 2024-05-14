@@ -83,7 +83,7 @@ class SubPatches2BigTiff:
         y = int(p[2])
         x_loc = int((x-self.x_min)/self.down_scale)
         y_loc = int((y-self.y_min)/self.down_scale)
-        self.out_arr[y_loc:y_loc+y_r, x_loc:x_loc+x_r, :] += sub_arr * self.filter[:,:,None]*self.xy_step/self.patch_size
+        self.out_arr[y_loc:y_loc+y_r, x_loc:x_loc+x_r, :] += sub_arr * self.filter[:,:,None]*(self.xy_step/self.patch_size)**2
         self.filter = hann_2d_win((512 // down_scale, 512 // down_scale))
 
 
