@@ -14,6 +14,19 @@ import skimage
 # save image patches back into a big tiff file
 # file name should fellow this pattern uuid_x_y.jpg or uuid_x_y.png
 # otherwise, you have to rewrite the function
+
+
+def hann_2d_win(shape=(256, 256)):
+    def hann2d(i, j):
+        i_val = 1 - np.cos((2 * math.pi * i) / (shape[0] - 1))
+        j_val = 1 - np.cos((2 * math.pi * j) / (shape[1] - 1))
+        hanning = (i_val * j_val) 
+        return hanning
+
+    hann2d_win = np.fromfunction(hann2d, shape)
+    return hann2d_win
+
+
 class SubPatches2BigTiff:
     # out = pyvips.Image.black(100, 100, bands=3) + 255
     def __init__(self, patch_dir, save_to, ext=".jpg", down_scale=8, patch_size=(256, 256), xy_step=(128, 128)):
@@ -26,6 +39,7 @@ class SubPatches2BigTiff:
         w, h, self.x_min, self.y_min = self.calculate_tiff_w_h()
         self.down_scale = down_scale
         print("Image W:%d/H:%d" % (int(w/self.down_scale), int(h/self.down_scale)))
+        self.filter = hann_2d_win((int(self.patch_size[0]/self.down_scale), int(self.patch_size[1]/self.down_scale))
         self.out_arr = (np.zeros((int(h/self.down_scale), int(w/self.down_scale), 3))+255).astype(np.uint8)
         # TODO: save mode = "ABA" or "ABB" or "single"
         # TODO: if list else if directory
@@ -69,7 +83,9 @@ class SubPatches2BigTiff:
         y = int(p[2])
         x_loc = int((x-self.x_min)/self.down_scale)
         y_loc = int((y-self.y_min)/self.down_scale)
-        self.out_arr[y_loc:y_loc+y_r, x_loc:x_loc+x_r, :] = sub_arr
+        self.out_arr[y_loc:y_loc+y_r, x_loc:x_loc+x_r, :] += sub_arr * self.filter[:,:,None]*(self.xy_step[0]/self.patch_size[0])**2
+        self.filter = hann_2d_win((512 // down_scale, 512 // down_scale))
+
 
     def parallel_save(self):    # example: save("big.tiff")
         num_processors = 5
