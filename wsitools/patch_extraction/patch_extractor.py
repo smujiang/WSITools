@@ -32,7 +32,7 @@ class ExtractorParameters:
 
     def __init__(self, save_dir=None, log_dir="./", save_format=".tfrecord", sample_cnt=-1, patch_filter_by_area=None, \
                  with_anno=True, threads=20, rescale_rate=128, patch_size=128, stride=128, patch_rescale_to=None,
-                 extract_layer=0):
+                 extract_layer=0, randomize_order=False):
         if save_dir is None:  # specify a directory to save the extracted patches
             raise Exception("Must specify a directory to save the extraction")
         self.save_dir = save_dir  # Output dir
@@ -46,6 +46,7 @@ class ExtractorParameters:
         self.extract_layer = extract_layer  # OpenSlide Level
         self.patch_filter_by_area = patch_filter_by_area  # Amount of tissue that should be present in a patch
         self.sample_cnt = sample_cnt  # Limit the number of patches to extract (-1 == all patches)
+        self.randomize_order = randomize_order # Randomize patch order; combine with sample_cnt to get a random sample
         self.threads = threads
 
 
@@ -70,6 +71,7 @@ class PatchExtractor:
         self.save_format = parameters.save_format  # Save to .tfrecord or .jpg
         self.patch_filter_by_area = parameters.patch_filter_by_area  # Amount of tissue that should be present in a patch
         self.sample_cnt = parameters.sample_cnt  # Limit the number of patches to extract (-1 == all patches)
+        self.randomize_order = parameters.randomize_order # Randomize patch order; use with sample_cnt for random sample
         self.feature_map = feature_map  # Instructions for building tfRecords
         self.annotations = annotations  # Annotation object
         if self.save_format == ".tfrecord":
@@ -169,6 +171,13 @@ class PatchExtractor:
                 if np.count_nonzero(wsi_thumb_mask[y_idx:y_idx_1, x_idx:x_idx_1]) > 0:
                     loc_x_selected.append(int(x))
                     loc_y_selected.append(int(y))
+
+        if self.randomize_order:
+            index = np.arange(len(loc_x_selected))
+            np.random.shuffle(index)
+            loc_x_selected = [loc_x_selected[k] for k in index]
+            loc_y_selected = [loc_y_selected[k] for k in index]
+
         return [loc_x_selected, loc_y_selected]
 
     def get_patch_locations_from_ROIs(self, ROIs, level_downsamples):
@@ -186,6 +195,13 @@ class PatchExtractor:
                 for y in range(y_lim[0], y_lim[1], int(self.stride * level_downsamples[self.extract_layer])):
                     loc_x_selected.append(int(x))
                     loc_y_selected.append(int(y))
+
+        if self.randomize_order:
+            index = np.arange(len(loc_x_selected))
+            np.random.shuffle(index)
+            loc_x_selected = [loc_x_selected[k] for k in index]
+            loc_y_selected = [loc_y_selected[k] for k in index]
+
         return [loc_x_selected, loc_y_selected]
 
     def validate_extract_locations(self, case_info, locations, thumbnail, level_downsamples):
