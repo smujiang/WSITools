@@ -10,6 +10,7 @@ import qupath.lib.objects.PathObject
 import static qupath.lib.gui.scripting.QPEx.*
 
 int patchSize = 512  // Adjust this as needed
+int downsample = 5  // downsample rate
 def outputDir = buildFilePath(PROJECT_BASE_DIR, 'patches')
 mkdirs(outputDir)
 
@@ -68,7 +69,7 @@ hierarchy.getAnnotationObjects().eachWithIndex{ anno, idx ->
                     anno.setPathClass(polygon.getPathClass())
                     annotated_cnt += 1
                     
-                    def requestROI = RegionRequest.createInstance(server.getPath(), 1, roi)
+                    def requestROI = RegionRequest.createInstance(server.getPath(), downsample, roi)
                     filename =  String.format( "%s_%s_%s.tif",anno.getPathClass().toString(),x,y)
                     print(filename)
                     writeImageRegion(server, requestROI, buildFilePath(PROJECT_BASE_DIR, 'patches', filename))
